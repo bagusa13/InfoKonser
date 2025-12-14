@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Panggung Tidak Ditemukan</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Style Khusus Halaman 404 agar Teks di Tengah */
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .error-code {
+            font-family: 'Playfair Display', serif;
+            font-size: 8rem;
+            line-height: 1;
+            background: linear-gradient(to bottom, #fff, #444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        .error-msg {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="preloader">
+        <div class="loader-brand">INFOKONSER<span style="color:#00f2ea;">.ID</span></div>
+        <div class="loader-line"></div>
+    </div>
+
+    <div class="error-container">
+        <i class="fas fa-compact-disc fa-spin" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px; opacity: 0.8; animation-duration: 3s;"></i>
+        
+        <div class="error-code">404</div>
+        
+        <h2 style="color:white; margin-bottom: 10px; font-family: var(--font-head);">Wrong Stage!</h2>
+        <p class="error-msg">Sepertinya Anda tersesat di backstage. Halaman yang Anda cari tidak ada atau tiketnya sudah hangus.</p>
+        
+        <a href="index.html" class="btn-primary">
+            <i class="fas fa-arrow-left"></i> KEMBALI KE AGENDA
+        </a>
+    </div>
+
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>

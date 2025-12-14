@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <title>InfoKonser ID - Jadwal Konser Musik Terlengkap</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+    
+    <meta name="description" content="Temukan jadwal konser musik terbaru, harga tiket, dan lokasi venue di Indonesia.">
+    <meta property="og:title" content="InfoKonser.ID - Cari Konser Favoritmu">
+    <meta property="og:description" content="Platform informasi jadwal konser musik terlengkap & terupdate di Indonesia.">
+    <meta property="og:image" content="https://placehold.co/1200x630/020408/00f2ea?text=INFOKONSER.ID">
+    <meta property="og:type" content="website">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div id="preloader">
+        <div class="loader-brand">INFOKONSER<span style="color:#00f2ea;">.ID</span></div>
+        <div class="loader-line"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="brand">INFOKONSER<span class="text-cyan">.ID</span></div>
+            <div class="nav-links">
+                <a href="index.html" class="active">Agenda</a>
+                <a href="tentang.html">Filosofi</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <div class="pill-badge">EXCLUSIVE SCHEDULE</div>
+            <h1 class="hero-title">Temukan Konser<br>Musik Favoritmu</h1>
+            <p class="hero-desc">Kurasi jadwal konser terbaik, harga tiket akurat, dan lokasi terupdate di satu tempat.</p>
+            <button class="btn-primary" onclick="document.getElementById('catalog').scrollIntoView({behavior: 'smooth'})">
+                CARI KONSER <i class="fas fa-arrow-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <main id="catalog" class="container section-catalog">
+        <div class="catalog-header" style="text-align: center;">
+            <h2 style="font-family:var(--font-head); font-size:2.5rem; color:white;">Explor <span class="serif-italic">Konser</span></h2>
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Cari nama Artis atau nama Kota">
+            </div>
+        </div>
+
+        <div class="filter-container">
+            <div class="filter-scroll">
+                <button class="filter-btn active" data-filter="all">ALL</button>
+                <button class="filter-btn" data-filter="FAVORITE" style="color:#ef4444;"><i class="fas fa-heart"></i> Favorit</button>
+                <button class="filter-btn" data-filter="ROCK">Rock</button>
+                <button class="filter-btn" data-filter="POP">Pop</button>
+                <button class="filter-btn" data-filter="JAZZ">Jazz</button>
+                <button class="filter-btn" data-filter="INDIE">Indie</button>
+                <button class="filter-btn" data-filter="METAL">Metal</button>
+                <button class="filter-btn" data-filter="PUNK">Punk</button>
+                <button class="filter-btn" data-filter="HIPHOP">HipHop</button>
+                <button class="filter-btn" data-filter="REGGAE">Reggae</button>
+                <button class="filter-btn" data-filter="DJ">DJ</button>
+                <button class="filter-btn" data-filter="HIPDUT">Hipdut</button>
+            </div>
+        </div>
+
+        <div class="grid" id="concertContainer">
+            </div>
+        
+        <div id="loadMoreContainer" style="text-align:center; margin-top:40px; display:none;">
+            <button id="btnLoadMore" class="btn-primary" style="background:rgba(255,255,255,0.1); width:200px; justify-content:center;">
+                More <i class="fas fa-chevron-down" style="margin-left:10px;"></i>
+            </button>
+        </div>
+
+        <div style="height: 100px;"></div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="brand" style="margin-bottom:10px;">INFOKONSER<span class="text-cyan">.ID</span></div>
+            <p>© 2025 The Concert Hub. Built for Music Lovers.</p>
+        </div>
+    </footer>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item active">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Agenda</span>
+        </a>
+        <a href="tentang.html" class="nav-item">
+            <i class="fas fa-info-circle"></i>
+            <span>Filosofi</span>
+        </a>
+    </nav>
+
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <div id="eventPopup" class="popup-overlay hidden">
+        <div class="popup-card">
+            <button id="closePopupBtn" class="close-btn"><i class="fas fa-times"></i></button>
+            <div id="popupContent"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-container">
+        <i class="fas fa-check-circle toast-icon"></i>
+        <span id="toastMsg" class="toast-msg">Notifikasi</span>
+    </div>
+
+    <script type="module" src="script.js"></script>
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Agenda</span>
+        </a>
+        <a href="tentang.html" class="nav-item">
+            <i class="fas fa-info-circle"></i>
+            <span>Filosofi</span>
+        </a>
+    </nav>
+</body>
+</html>

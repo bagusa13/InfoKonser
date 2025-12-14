@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - InfoKonser</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    
+    <div id="preloader">
+        <div class="loader-brand">INFOKONSER<span style="color:#00f2ea;">.ID</span></div>
+        <div class="loader-line"></div>
+    </div>
+
+    <div class="admin-login-wrapper" id="loginView">
+        <div class="login-box">
+            <h2 style="margin-bottom:10px; color:white; font-family:var(--font-head);">Admin Access</h2>
+            <p style="color:#888; margin-bottom:30px; font-size:0.9rem;">Hi, Selamat datang di panel admin!!</p>
+            
+            <form id="loginForm">
+                <input type="text" id="username" class="input-dark" placeholder="Email / Username" required>
+                
+                <div style="position:relative;">
+                    <input 
+                    type="password" 
+                    id="password" 
+                    class="input-dark" 
+                    placeholder="Password" 
+                    required 
+                    style="padding-right:45px;"
+                    autocomplete="off" 
+                    autocorrect="off" 
+                    autocapitalize="off" 
+                    spellcheck="false"
+                >
+                    <i id="togglePass" class="fas fa-eye" style="position:absolute; right:15px; top:15px; color:#666; cursor:pointer; font-size: 1rem; z-index: 10;"></i>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top: 10px;">LOGIN</button>
+            </form>
+        </div>
+    </div>
+
+    <section id="adminPanel" class="container hidden" style="padding-top:50px; padding-bottom:100px;">
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h2 style="color:white; font-family:var(--font-head);">Dashboard Super Admin</h2>
+            <button id="logoutBtn" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:8px 24px; border-radius:50px; cursor:pointer; font-size: 0.8rem; letter-spacing: 1px; transition:0.3s;">LOGOUT</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:15px; margin-bottom:30px;">
+            <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid var(--border); text-align:center;">
+                <div style="font-size:0.7rem; color:#888; letter-spacing:1px; margin-bottom:5px; font-weight:600;">TOTAL EVENT</div>
+                <div id="statTotal" style="font-size:2rem; font-weight:700; color:white;">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid var(--border); text-align:center;">
+                <div style="font-size:0.7rem; color:#888; letter-spacing:1px; margin-bottom:5px; font-weight:600;">TOTAL SOLD OUT</div>
+                <div id="statSold" style="font-size:2rem; font-weight:700; color:#ef4444;">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid var(--border); text-align:center;">
+                <div style="font-size:0.7rem; color:#888; letter-spacing:1px; margin-bottom:5px; font-weight:600;">TOTAL AVAILABLE</div>
+                <div id="statActive" style="font-size:2rem; font-weight:700; color:var(--primary);">0</div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3 id="formTitle" style="margin-bottom:25px; color:var(--primary); font-family:var(--font-head);">Tambah Event</h3>
+            
+            <input type="hidden" id="editId">
+            <input type="hidden" id="oldImage">
+            
+            <form id="concertForm">
+                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <input type="text" id="bandName" class="input-dark" placeholder="Nama Artis / Event" required>
+                    <input type="text" id="concertCity" class="input-dark" placeholder="Kota (Contoh: JAKARTA)" required>
+                </div>
+                
+                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <input type="text" id="concertVenue" class="input-dark" placeholder="Nama Venue/Lokasi" required>
+                    <select id="concertGenre" class="input-dark" style="color:#aaa;">
+                        <option value="ROCK">ROCK</option>
+                        <option value="POP">POP</option>
+                        <option value="JAZZ">JAZZ</option>
+                        <option value="INDIE">INDIE</option>
+                        <option value="METAL">METAL</option>
+                        <option value="PUNK">PUNK</option>
+                        <option value="HIPHOP">HIPHOP</option>
+                        <option value="REGGAE">REGGAE</option>
+                        <option value="DJ">DJ</option>
+                        <option value="HIPDUT">HIPDUT</option>
+                    </select>
+                    <input type="text" id="concertPrice" class="input-dark" placeholder="Harga (Rp)" required>
+                </div>
+
+                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <input type="date" id="concertDateOnly" class="input-dark" required style="color:#aaa;">
+                    <input type="text" id="concertTimeOnly" class="input-dark" placeholder="Jam (Contoh: 19:00)">
+                    <select id="concertTimezone" class="input-dark" style="color:#aaa;">
+                        <option value="WIB">WIB</option>
+                        <option value="WITA">WITA</option>
+                        <option value="WIT">WIT</option>
+                    </select>
+                </div>
+
+                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <input type="number" id="concertDuration" class="input-dark" value="1" placeholder="Durasi (Hari)">
+                    <select id="concertStatus" class="input-dark" style="color:#aaa;">
+                        <option value="available">Tersedia</option>
+                        <option value="sold-out">Sold Out</option>
+                        <option value="limited">Limited</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:25px; border: 1px dashed var(--border); padding: 20px; border-radius: 12px; text-align:center;">
+                    <label style="color:#888; font-size:0.9rem; margin-bottom:10px; display:block;">Upload Poster Event</label>
+                    <input type="file" id="imageInput" class="input-dark" style="margin-bottom:5px;">
+                    <p id="uploadStatus" style="font-size:0.8rem; margin-top:5px; color:#666;"></p>
+                    <input type="hidden" id="concertImage">
+                    <div id="imagePreview" style="margin-top:10px; max-width: 200px; margin-left:auto; margin-right:auto;"></div>
+                </div>
+
+                <textarea id="concertDetail" class="input-dark" rows="5" placeholder="Deskripsi konser (Line up, Aturan, dll)" required style="margin-bottom:25px;"></textarea>
+
+                <div style="display:flex; gap:15px; margin-top: 10px;">
+                    <button type="submit" id="submitBtn" class="btn-primary">UPLOAD</button>
+                    <button type="button" id="cancelEditBtn" style="background:transparent; border:1px solid #555; color:#888; padding:10px 30px; border-radius:50px; cursor:pointer; display:none; transition:0.3s;">Batal</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th width="80">Poster</th>
+                        <th>Detail Event</th>
+                        <th width="150" style="text-align:right;">Perubahan</th>
+                    </tr>
+                </thead>
+                <tbody id="adminConcerts"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <div id="toast" class="toast-container">
+        <i class="fas fa-check-circle toast-icon"></i>
+        <span id="toastMsg" class="toast-msg">Berhasil!</span>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

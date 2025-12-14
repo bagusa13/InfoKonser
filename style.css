@@ -1,0 +1,403 @@
+/* ============================================================
+   STYLE V3 - FINAL FIXED (POPUP SIZE OPTIMIZED)
+   Base: Cinematic Glass V2 + V3 Addons
+   ============================================================ */
+
+/* Import Font Premium */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
+:root {
+    /* --- PALET WARNA (V2 ORIGINAL) --- */
+    --bg-main: #020408; 
+    --bg-glass: rgba(20, 25, 35, 0.6); 
+    --bg-glass-hover: rgba(30, 35, 50, 0.8);
+    
+    /* --- ACCENTS --- */
+    --primary: #00f2ea; /* Electric Cyan */
+    --primary-glow: rgba(0, 242, 234, 0.5);
+    --secondary: #4f46e5; 
+    --success: #10b981; 
+    
+    --text-main: #ffffff;
+    --text-muted: #cbd5e1; 
+    
+    --border: rgba(255, 255, 255, 0.1);
+    --border-highlight: rgba(255, 255, 255, 0.25);
+    
+    --radius: 20px;
+    --radius-pill: 100px;
+    
+    /* --- TYPOGRAPHY --- */
+    --font-head: 'Playfair Display', serif;
+    --font-body: 'Outfit', sans-serif;
+    
+    /* --- ANIMATION --- */
+    --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* RESET */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    min-height: 100vh;
+    line-height: 1.6;
+    position: relative;
+    padding-bottom: 0; 
+}
+
+/* BACKGROUND HALUS (V2) */
+body::before {
+    content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: 
+        radial-gradient(circle at 15% 15%, rgba(0, 242, 234, 0.06), transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(79, 70, 229, 0.06), transparent 45%);
+    z-index: -2;
+    pointer-events: none;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.hidden { display: none !important; }
+
+/* UTILS TEXT */
+.text-cyan { color: var(--primary); text-shadow: 0 0 15px rgba(0, 242, 234, 0.3); }
+.text-green { color: var(--success); text-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+.serif-italic { font-family: var(--font-head); font-style: italic; color: var(--primary); font-weight: 600; }
+.gradient-text { 
+    background: linear-gradient(to right, #fff, var(--primary)); 
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+}
+
+/* --- NAVBAR (Desktop) --- */
+.navbar {
+    position: fixed; top: 0; width: 100%; z-index: 1000; padding: 1.2rem 0;
+    background: rgba(2, 4, 8, 0.85);
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border);
+}
+.nav-content { display: flex; justify-content: space-between; align-items: center; }
+.brand { font-family: var(--font-head); font-weight: 700; font-size: 1.6rem; color: white; }
+.nav-links { display: flex; gap: 2.5rem; }
+.nav-links a { 
+    color: var(--text-muted); text-decoration: none; font-weight: 500; 
+    transition: 0.3s; position: relative; 
+}
+.nav-links a.active, .nav-links a:hover { color: white; }
+.nav-links a.active::after {
+    content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 1px;
+    background: var(--primary); box-shadow: 0 0 10px var(--primary);
+}
+
+/* --- HERO SECTION --- */
+.hero { padding: 160px 0 100px; text-align: center; position: relative; }
+
+.badge-pill, .pill-badge {
+    display: inline-block; padding: 8px 24px; border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-highlight);
+    font-size: 0.75rem; letter-spacing: 3px; color: var(--primary);
+    margin-bottom: 2rem; font-weight: 700; text-transform: uppercase;
+    box-shadow: 0 0 20px rgba(0, 242, 234, 0.1);
+}
+
+.hero h1, .hero-title {
+    font-family: var(--font-head); font-size: 4rem; line-height: 1.1;
+    margin-bottom: 1.5rem; font-weight: 700; color: white;
+}
+.hero-desc { color: var(--text-muted); font-size: 1.2rem; max-width: 600px; margin: 0 auto 3rem; }
+
+/* BUTTON PRIMARY */
+.btn-primary {
+    padding: 14px 35px; background: transparent; color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3); border-radius: var(--radius-pill);
+    font-weight: 600; cursor: pointer; letter-spacing: 1px; transition: 0.3s;
+    display: inline-flex; align-items: center; gap: 10px; text-transform: uppercase; font-size: 0.85rem;
+}
+.btn-primary:hover {
+    border-color: var(--primary); color: #000; background: var(--primary);
+    box-shadow: 0 0 25px rgba(0, 242, 234, 0.4); transform: translateY(-3px);
+}
+
+/* --- CATALOG AREA --- */
+.section-catalog { padding: 2rem 0 6rem; }
+.catalog-header { margin-bottom: 2rem; }
+
+.search-wrapper { position: relative; margin-top: 1.5rem; }
+.search-input {
+    width: 100%; padding: 16px 24px 16px 50px;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+    border-radius: 16px; color: white; font-size: 1rem; transition: 0.3s; font-family: inherit;
+}
+.search-input:focus { 
+    border-color: var(--primary); background: rgba(0,0,0,0.5); 
+    box-shadow: 0 0 15px rgba(0, 242, 234, 0.1);
+}
+.search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #666; }
+
+/* FILTER SCROLL */
+.filter-container { overflow-x: auto; padding-bottom: 10px; margin-bottom: 2rem; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.filter-container::-webkit-scrollbar { display: none; }
+.filter-scroll { display: flex; gap: 10px; }
+
+.filter-btn {
+    padding: 10px 24px; border-radius: var(--radius-pill); background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border); color: #aaa; cursor: pointer; transition: 0.3s; white-space: nowrap; font-family: inherit;
+}
+.filter-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.filter-btn.active { background: white; color: black; border-color: white; font-weight: 700; }
+
+/* --- CARD GRID --- */
+.grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    gap: 2rem; 
+}
+
+.card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+    transition: transform 0.4s var(--ease-out), box-shadow 0.4s;
+    display: flex; flex-direction: column;
+    position: relative;
+    /* Tambahan agar animasi load more halus */
+    animation: fadeInUp 0.6s ease backwards;
+}
+@keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+.card:hover { 
+    transform: translateY(-8px); 
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.25);
+}
+
+.card-img-wrap { height: 220px; position: relative; overflow: hidden; }
+.card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 0.7s; }
+.card:hover .card-img-wrap img { transform: scale(1.05); }
+
+.status-badge {
+    position: absolute; top: 15px; left: 15px; padding: 5px 12px;
+    border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    z-index: 5; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);
+}
+
+.btn-wishlist {
+    position: absolute; top: 15px; right: 15px; 
+    width: 40px; height: 40px; border-radius: 50%; 
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2); 
+    color: white; display: flex; align-items: center; justify-content: center; 
+    cursor: pointer; transition: 0.3s; z-index: 10;
+}
+.btn-wishlist:hover { transform: scale(1.1); background: white; color: #ef4444; }
+.btn-wishlist.active { background: var(--primary); color: black; border-color: var(--primary); }
+
+.card-content { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; }
+.card-genre { font-size: 0.7rem; color: var(--primary); font-weight: 700; letter-spacing: 1.5px; margin-bottom: 8px; text-transform: uppercase; }
+.card h3 { font-family: var(--font-head); font-size: 1.5rem; margin-bottom: 15px; color: white; line-height: 1.3; }
+
+.card-details { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 15px; border-top: 1px solid var(--border); }
+.detail-row { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem; }
+.detail-row i { color: var(--primary); width: 20px; text-align: center; }
+
+.btn-card-action {
+    margin-top: 20px; width: 100%; padding: 12px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08); 
+    border: 1px solid rgba(255, 255, 255, 0.15); color: white;
+    font-weight: 600; cursor: pointer; transition: 0.3s; letter-spacing: 0.5px;
+}
+.btn-card-action:hover:not(:disabled) { 
+    background: var(--primary); color: black; border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(0, 242, 234, 0.4); 
+}
+.btn-card-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- POPUP & TOAST --- */
+.popup-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(10px);
+}
+.popup-overlay.active { opacity: 1; visibility: visible; }
+
+/* --- PERBAIKAN POPUP (FIXED) --- */
+.popup-card {
+    background: #111; 
+    width: 90%;            /* Ubah jadi 90% agar ada jarak kiri-kanan di HP */
+    max-width: 480px;      /* Batas lebar di Desktop diperkecil dikit */
+    max-height: 80vh;      /* PENTING: Batasi tinggi maksimal 80% layar */
+    overflow-y: auto;      /* PENTING: Agar bisa di-scroll di dalam kotak */
+    border-radius: 24px;
+    border: 1px solid var(--border); 
+    padding: 25px;         /* Padding dikurangi sedikit biar lega */
+    position: relative;
+    transform: scale(0.9); 
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.popup-overlay.active .popup-card { transform: scale(1); }
+
+.close-btn { 
+    position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); color: white; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: 0.3s;
+}
+.close-btn:hover { background: var(--primary); color: black; transform: rotate(90deg); }
+
+.toast-container {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: #1a1a1a; border: 1px solid var(--primary); padding: 12px 25px;
+    border-radius: 50px; display: flex; align-items: center; gap: 10px; z-index: 3000;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: max-content;
+}
+.toast-container.show { transform: translateX(-50%) translateY(0); }
+.toast-msg { color: white; font-weight: 500; font-size: 0.9rem; }
+.toast-icon { color: var(--primary); }
+
+/* --- ADMIN PANEL --- */
+.admin-login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.login-box { width: 100%; max-width: 400px; padding: 2.5rem; background: #0a0c10; border: 1px solid var(--border); border-radius: 24px; text-align: center; }
+
+.input-dark { 
+    width: 100%; padding: 12px 15px; background: #151515; border: 1px solid #333; 
+    color: white; border-radius: 10px; margin-bottom: 15px; font-family: inherit;
+    transition: 0.3s;
+}
+.input-dark:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(0,242,234,0.1); }
+
+.admin-card { background: #0a0c10; padding: 2rem; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 2rem; }
+.table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; }
+.data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+.data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #222; color: #ddd; }
+.data-table th { background: rgba(255,255,255,0.03); color: var(--primary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+/* FOOTER */
+footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px solid var(--border); background: #010101; }
+
+/* ABOUT PAGE */
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+.about-img img { width: 100%; border-radius: 24px; filter: grayscale(100%); transition: 0.5s; border: 1px solid var(--border); }
+.about-img:hover img { filter: grayscale(0%); border-color: var(--primary); }
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+@media (max-width: 768px) {
+    body { padding-bottom: 10px; } /* Memberi ruang agar konten tidak tertutup menu */
+    
+    .nav-links { display: none !important; } /* Sembunyikan menu atas */
+    
+    /* PAKSA MUNCULKAN MENU BAWAH */
+    .bottom-nav { 
+        display: flex !important; 
+        opacity: 1 !important;
+        visibility: visible !important;
+        z-index: 99999 !important; /* Paling depan */
+    }
+
+    /* Penyesuaian lain */
+    .hero { padding-top: 120px; }
+    .hero h1 { font-size: 2.5rem; }
+    .grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .popup-card { width: 95%; max-height: 85vh; overflow-y: auto; }
+}
+
+@media (max-width: 768px) {
+    body { padding-bottom: 90px; }
+    .nav-links { display: none; }
+    .bottom-nav { display: flex; }
+    .hero { padding-top: 120px; }
+    .hero h1 { font-size: 2.5rem; }
+    .grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .card-img-wrap { height: 200px; }
+    .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .popup-card { width: 95%; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .form-row { grid-template-columns: 1fr !important; gap: 10px !important; }
+    
+    /* Fix posisi tombol back to top di HP */
+    #backToTop { bottom: 100px; right: 20px; }
+}
+
+/* --- BOTTOM NAV (Mobile Only) --- */
+.bottom-nav {
+    display: none; /* Tetap pertahankan ini jika logic JS Anda membutuhkannya */
+    position: fixed;
+    bottom: 20px; /* Diangkat sedikit supaya melayang (floating) ala iPhone */
+    left: 50%;
+    transform: translateX(-50%); /* Supaya rata tengah */
+    width: 90%; /* Tidak full 100%, supaya terlihat manis */
+    max-width: 400px;
+    
+    /* GAYA IPHONE BLUR (Glassmorphism) */
+    background: rgba(255, 255, 255, 0.75); /* Putih transparan */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    
+    border-radius: 25px; /* Sudut membulat */
+    z-index: 9999;
+    justify-content: space-around;
+    padding: 10px 15px; /* Padding dikecilkan agar "tidak terlalu tinggi" */
+    
+    /* Hapus border-top lama karena sudah pakai border radius keliling */
+    border-top: none; 
+}
+
+/* =========================================
+   V3 ADD-ONS: NEW FEATURES STYLING
+   (Ditambahkan di bawah agar aman)
+   ========================================= */
+
+/* 1. CINEMATIC PRELOADER (SMOOTH TRANSITION) */
+#preloader {
+    position: fixed; inset: 0; 
+    background: #020408; z-index: 99999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    /* Transisi Opacity untuk efek Smooth Fade Out */
+    transition: opacity 0.8s ease-out, visibility 0.8s;
+}
+#preloader.hide { opacity: 0; visibility: hidden; }
+
+.loader-brand {
+    font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700;
+    color: white; letter-spacing: 2px;
+    animation: pulseGlow 2s infinite alternate;
+}
+.loader-line {
+    width: 0%; height: 2px; background: #00f2ea; margin-top: 15px;
+    border-radius: 2px;
+    animation: loadLine 1.5s ease-in-out forwards;
+}
+@keyframes pulseGlow { 0% { opacity: 0.5; } 100% { opacity: 1; text-shadow: 0 0 20px rgba(0,242,234,0.6); } }
+@keyframes loadLine { 0% { width: 0%; } 100% { width: 150px; } }
+
+/* 2. BACK TO TOP BUTTON */
+#backToTop {
+    position: fixed; bottom: 30px; right: 30px;
+    width: 45px; height: 45px; background: white;
+    color: black; border-radius: 50%; border: none;
+    font-size: 1.2rem; cursor: pointer; z-index: 900;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; transform: translateY(20px);
+    transition: 0.3s; box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+#backToTop.show { opacity: 1; visibility: visible; transform: translateY(0); }
+#backToTop:hover { transform: translateY(-5px); background: var(--primary); }
+
+/* 3. MAP CONTAINER (POPUP) */
+.map-container {
+    margin-bottom: 25px; border-radius: 15px; overflow: hidden; 
+    border: 1px solid var(--border); background: #222;
+}
+.map-link-btn {
+    display: block; text-align: center; background: #1a1a1a; 
+    color: #aaa; font-size: 0.8rem; padding: 10px; text-decoration: none;
+    transition: 0.3s;
+}
+.map-link-btn:hover { background: #333; color: white; }
+
