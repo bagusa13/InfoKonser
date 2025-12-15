@@ -2,7 +2,7 @@
    INFOKONSER.ID - ENGINE V3 (FINAL FIXED - CLOUDINARY STORAGE)
    Features: Limit 12, Map Embed (Small), Admin Stats, & Smooth UI
    Perubahan: ImgBB diganti Cloudinary & URL Google Maps diperbaiki, Preloader dipercepat dan fix bug HP.
-   Notifikasi: Dinamis, mencantumkan nama konser. FIX BUG TOAST MENETAP.
+   MODIFIED: Logic Harga IDR/USD, Format IDR menggunakan titik real-time di Admin.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -34,7 +34,6 @@ let currentData = [];  // Data yang sedang aktif
 
 // --- MAIN ROUTER ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Jalankan fitur tambahan (Preloader, BackToTop, TogglePass)
     setupAddons();
 
     if (document.getElementById('concertContainer')) {
@@ -51,23 +50,20 @@ function initPublicPage() {
     const container = document.getElementById('concertContainer');
     const q = query(dbCollection, orderBy("rawDate", "asc"));
     
-    // Skeleton Loading Sederhana
     container.innerHTML = '<div style="color:#666; text-align:center; grid-column:1/-1; padding:50px;">Memuat data...</div>';
 
     setupSearch();
     setupFilters();
     setupPopupLogic();
 
-    // LISTENER TOMBOL LOAD MORE (V3 Feature)
     const btnLoad = document.getElementById('btnLoadMore');
     if(btnLoad) {
         btnLoad.addEventListener('click', () => {
-            currentLimit += 12; // Tambah 12 data lagi
-            renderGrid(currentData, true); // Render ulang (mode append)
+            currentLimit += 12; 
+            renderGrid(currentData, true); 
         });
     }
 
-    // LISTENER KLIK KARTU (Detail & Wishlist)
     container.addEventListener('click', (e) => {
         const wishBtn = e.target.closest('.btn-wishlist');
         if (wishBtn) { e.stopPropagation(); toggleWishlist(wishBtn.dataset.id); return; }
@@ -76,7 +72,6 @@ function initPublicPage() {
         if (detailBtn && !detailBtn.hasAttribute('disabled')) { showPopup(detailBtn.dataset.id); }
     });
 
-    // REALTIME LISTENER
     onSnapshot(q, (snapshot) => {
         concerts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         currentData = concerts;
@@ -91,21 +86,17 @@ function renderGrid(data, isLoadMore = false) {
     const container = document.getElementById('concertContainer');
     const loadContainer = document.getElementById('loadMoreContainer');
     
-    // Jika bukan load more (misal filter baru), reset container & limit
+    container.innerHTML = "";
     if (!isLoadMore) {
-        currentLimit = 12;
-        container.innerHTML = "";
-    } else {
-        container.innerHTML = "";
-    }
-
+        currentLimit = 12; 
+    } 
+    
     if (data.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding:50px; grid-column:1/-1; opacity:0.5;">Belum ada agenda konser.</div>`;
         if(loadContainer) loadContainer.style.display = 'none';
         return;
     }
 
-    // POTONG DATA SESUAI LIMIT
     const slicedData = data.slice(0, currentLimit);
     const now = new Date(); now.setHours(0,0,0,0);
 
@@ -129,7 +120,6 @@ function renderGrid(data, isLoadMore = false) {
         const heartIcon = isLoved ? "fa-solid fa-heart" : "fa-regular fa-heart";
         const heartActive = isLoved ? "active" : "";
 
-        // Animasi delay bertingkat
         const delay = index * 0.05;
 
         const html = `
@@ -153,7 +143,6 @@ function renderGrid(data, isLoadMore = false) {
         container.innerHTML += html;
     });
 
-    // LOGIC TOMBOL LOAD MORE
     if (slicedData.length < data.length) {
         if(loadContainer) loadContainer.style.display = 'block';
     } else {
@@ -161,7 +150,7 @@ function renderGrid(data, isLoadMore = false) {
     }
 }
 
-// FILTER & SEARCH
+// ... (setupSearch, setupFilters, applyFilter, toggleWishlist tidak berubah)
 function setupSearch() {
     const input = document.getElementById('searchInput');
     if(!input) return;
@@ -196,21 +185,18 @@ function applyFilter(filter) {
     renderGrid(res);
 }
 
-// WISHLIST (Diperbaiki: Notifikasi Dinamis)
 function toggleWishlist(id) {
     const idx = wishlist.indexOf(id);
-    const concert = concerts.find(c => c.id === id); // AMBIL DATA KONSER
+    const concert = concerts.find(c => c.id === id); 
 
     if (!concert) return; 
 
     let msg = "";
     if (idx === -1) {
         wishlist.push(id);
-        // Opsi 2: Notifikasi dengan Nama Konser (Ditambahkan)
         msg = `❤️ ${concert.name} Ditambahkan ke Favorit!`; 
     } else {
         wishlist.splice(idx, 1);
-        // Opsi 2: Notifikasi dengan Nama Konser (Dihapus)
         msg = `💔 ${concert.name} Dihapus dari Favorit.`; 
     }
     
@@ -222,7 +208,6 @@ function toggleWishlist(id) {
         btn.innerHTML = wishlist.includes(id) ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
     }
 
-    // Panggil showToast dengan pesan dinamis
     showToast(msg);
     
     const activeFilter = document.querySelector('.filter-btn.active');
@@ -230,8 +215,7 @@ function toggleWishlist(id) {
         applyFilter('FAVORITE');
     }
 }
-
-// POPUP DETAIL (V3 Fixed: Smaller Map)
+// ... (showPopup dan setupPopupLogic tidak berubah)
 function showPopup(id) {
     const c = concerts.find(x => x.id === id);
     if (!c) return;
@@ -242,9 +226,9 @@ function showPopup(id) {
     popup.classList.remove('hidden');
     setTimeout(() => popup.classList.add('active'), 10);
 
-    // GENERATE GOOGLE MAPS EMBED URL (URL MAPS DIPERBAIKI)
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    const mapLinkUrl = `https://maps.google.com/?q=${mapQuery}`;
 
     content.innerHTML = `
         <div style="margin-bottom:20px;">
@@ -255,7 +239,7 @@ function showPopup(id) {
         <div style="display:grid; gap:15px; margin-bottom:25px; border-top:1px solid var(--border); padding-top:20px;">
              <div class="detail-row"><span style="width:80px;">Tanggal</span> <span style="color:white;">${formatDateIndo(new Date(c.rawDate))}</span></div>
              <div class="detail-row"><span style="width:80px;">Lokasi</span> <span style="color:white;">${c.venue}, ${c.city}</span></div>
-             <div class="detail-row"><span style="width:80px;">Tiket</span> <span style="color:var(--primary); font-weight:600;">${c.price}</span></div>
+             <div class="detail-row"><span style="width:80px;">Tiket</span> <span style="color:var(--primary); font-weight:600;">${c.price || 'TBA'}</span></div>
              <div class="detail-row"><span style="width:80px;">Waktu</span> <span style="color:white;">${c.time || 'Open Gate'} ${c.timezone || 'WIB'}</span></div>
         </div>
 
@@ -272,7 +256,7 @@ function showPopup(id) {
                 src="${mapEmbedUrl}"
                 style="filter: invert(90%) hue-rotate(180deg);">
             </iframe>
-            <a href="https://maps.google.com/maps?q=${mapQuery}" target="_blank" class="map-link-btn">
+            <a href="${mapLinkUrl}" target="_blank" class="map-link-btn">
                 <i class="fas fa-external-link-alt"></i> Buka di Google Maps App
             </a>
         </div>
@@ -302,27 +286,21 @@ function setupPopupLogic() {
     });
 }
 
-// --- V3 ADDONS ---
+// ... (setupAddons, formatDateIndo, showToast tidak berubah)
 function setupAddons() {
-    // 1. Preloader Smooth Fade Out (LOGIC DIPERBAIKI UNTUK FIX BUG HP)
     window.addEventListener('load', () => {
         const preloader = document.getElementById('preloader');
         if(preloader) {
-            // [1] PANGGIL FADE OUT CSS LEBIH CEPAT (300ms)
             setTimeout(() => {
                 preloader.classList.add('hide'); 
-                
-                // [2] HAPUS ELEMEN DARI DOM SETELAH TRANSISI CSS SELESAI (0.8s)
-                // Ini mencegah bug di HP di mana preloader masih memblokir interaksi sentuh/klik.
                 setTimeout(() => {
-                    preloader.remove(); // Hapus dari DOM
+                    preloader.remove(); 
                 }, 800); 
 
             }, 300); 
         }
     });
 
-    // 2. Back To Top
     const backBtn = document.getElementById('backToTop');
     if(backBtn) {
         window.addEventListener('scroll', () => {
@@ -331,7 +309,6 @@ function setupAddons() {
         });
     }
 
-    // 3. Toggle Password (Admin)
     const toggleBtn = document.getElementById('togglePass');
     const passInput = document.getElementById('password');
     if(toggleBtn && passInput) {
@@ -344,42 +321,97 @@ function setupAddons() {
     }
 }
 
-// UTILS
 function formatDateIndo(date) {
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// showToast (Perbaikan Bug Toast Menetap)
 function showToast(msg) {
     const toast = document.getElementById('toast');
     const txt = document.getElementById('toastMsg');
     
-    // Reset status show dan opacity untuk memastikan animasi berulang
     toast.classList.remove('show');
     toast.style.opacity = '0'; 
 
     txt.innerText = msg;
     
-    // [1] Pemicu Tampil
     setTimeout(() => {
         toast.classList.add('show');
         toast.style.opacity = '1';
-    }, 10); // Delay kecil sebelum tampil agar transisi CSS bekerja
+    }, 10); 
 
-    // [2] Pemicu Hilang (3 detik)
     setTimeout(() => {
         toast.classList.remove('show');
         toast.style.opacity = '0';
     }, 3000);
 
-    // [3] Keamanan Jangka Panjang (Hapus kelas setelah 3.5 detik)
-    // Memastikan toast benar-benar dibersihkan setelah proses fade out selesai.
     setTimeout(() => {
         if (!toast.classList.contains('show')) {
              toast.style.opacity = '0';
         }
     }, 3500); 
 }
+
+// UTILS HARGA BARU
+// Fungsi untuk membersihkan nilai input harga
+function cleanPrice(value) {
+    return value.replace(/[^0-9]/g, '');
+}
+
+// Fungsi untuk format nilai IDR saat ditampilkan di publik
+function formatRupiahDisplay(number) {
+    if (!number) return 'TBA';
+    // Hapus semua kecuali angka
+    const cleanNumber = number.toString().replace(/[^0-9]/g, ''); 
+    if (!cleanNumber) return 'TBA';
+    
+    return 'Rp' + cleanNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Fungsi untuk format nilai USD saat ditampilkan di publik
+function formatUSDDisplay(number) {
+    if (!number) return 'TBA';
+    // Hapus semua kecuali angka dan titik (untuk desimal)
+    const cleanNumber = number.toString().replace(/[^0-9.]/g, ''); 
+    if (!cleanNumber) return 'TBA';
+
+    let parts = cleanNumber.split('.');
+    let integerPart = parts[0] || '0';
+    let decimalPart = parts[1] ? parts[1].substring(0, 2) : '00';
+    
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    
+    return '$' + integerPart + '.' + decimalPart;
+}
+
+// Fungsi untuk memformat input di Admin Panel secara real-time
+function formatPriceInput(inputElement) {
+    const currency = document.getElementById('concertCurrency').value;
+    let value = inputElement.value;
+    
+    if (currency === 'IDR') {
+        // IDR: Hanya terima angka, format dengan titik sebagai pemisah ribuan
+        let clean = cleanPrice(value);
+        if (clean) {
+            // Tampilkan kembali dengan format titik (sesuai permintaan)
+            inputElement.value = clean.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        } else {
+            inputElement.value = '';
+        }
+    } else if (currency === 'USD') {
+        // USD: Terima angka dan titik untuk desimal.
+        let clean = value.replace(/[^0-9.]/g, '');
+        // Batasi titik hanya satu
+        let parts = clean.split('.');
+        if (parts.length > 2) {
+            clean = parts.shift() + '.' + parts.join('');
+        }
+        inputElement.value = clean;
+    } else {
+        // TBA: Bersihkan input dari format
+        inputElement.value = value.replace(/[^0-9.]/g, '');
+    }
+}
+
 
 /* ============================================================
    BAGIAN 2: ADMIN PAGE LOGIC
@@ -424,12 +456,17 @@ function initAdminPage() {
 }
 
 function setupAdminForm() {
-    // Format Rupiah
     const priceInput = document.getElementById('concertPrice');
+    const currencyInput = document.getElementById('concertCurrency');
+
     if(priceInput) {
-        priceInput.addEventListener('keyup', function(e) {
-            let val = this.value.replace(/\D/g, '');
-            if(val !== "") this.value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+        // Listener untuk input harga dinamis dan real-time formatting
+        priceInput.addEventListener('input', function() {
+            formatPriceInput(this);
+        });
+        // Listener untuk perubahan mata uang (memaksa pemformatan ulang)
+        currencyInput.addEventListener('change', function() {
+            formatPriceInput(priceInput);
         });
     }
 
@@ -440,7 +477,6 @@ function setupAdminForm() {
             const file = e.target.files[0];
             if(!file) return;
             
-            // --- KONFIGURASI CLOUDINARY BARU ---
             const CLOUDINARY_CLOUD_NAME = 'dyfc0l8y5'; 
             const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
             const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
@@ -448,15 +484,13 @@ function setupAdminForm() {
             document.getElementById('uploadStatus').innerText = "⏳Sedang Mengupload ke Cloudinary...";
             
             const formData = new FormData();
-            formData.append("file", file); // Cloudinary menggunakan key 'file'
+            formData.append("file", file); 
             formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); 
             
             try {
-                // PANGGILAN API CLOUDINARY
                 const req = await fetch(CLOUDINARY_URL, { method:'POST', body:formData });
                 const res = await req.json();
                 
-                // AMBIL URL DARI RESPON
                 if(res.secure_url) {
                     const link = res.secure_url;
                     document.getElementById('concertImage').value = link;
@@ -484,6 +518,21 @@ function setupAdminForm() {
             const img = document.getElementById('concertImage').value || document.getElementById('oldImage').value;
             
             if(!img) { alert("Wajib upload poster!"); return; }
+            
+            const currency = document.getElementById('concertCurrency').value;
+            const rawPriceInput = document.getElementById('concertPrice').value;
+
+            // Simpan nilai harga mentah (angka murni) ke database
+            const rawPrice = (currency === 'IDR') ? cleanPrice(rawPriceInput) : rawPriceInput;
+
+            let formattedPrice = 'TBA';
+            if (currency === 'IDR') {
+                formattedPrice = formatRupiahDisplay(rawPrice);
+            } else if (currency === 'USD') {
+                formattedPrice = formatUSDDisplay(rawPrice);
+            } else {
+                formattedPrice = 'TBA';
+            }
 
             const data = {
                 name: document.getElementById('bandName').value,
@@ -494,7 +543,9 @@ function setupAdminForm() {
                 time: document.getElementById('concertTimeOnly').value,
                 timezone: document.getElementById('concertTimezone').value,
                 duration: document.getElementById('concertDuration').value,
-                price: document.getElementById('concertPrice').value,
+                price: formattedPrice, 
+                rawPrice: rawPrice, 
+                currency: currency, 
                 status: document.getElementById('concertStatus').value,
                 desc: document.getElementById('concertDetail').value,
                 image: img
@@ -536,12 +587,11 @@ function loadAdminData() {
         snap.forEach(docSnap => {
         const d = docSnap.data();
 
-    // Status Color
     const statusColor = d.status === 'sold-out' ? '#ef4444' : 'var(--primary)';
 
     tbody.innerHTML += `
     <tr>
-        <td><img src="${d.image}" width="50" style="border-radius:6px;"></td>
+        <td><img src="${d.image}" width="50" style="border-radius:6px;" onerror="this.src='./images/placeholder.jpg'"></td>
         <td>
             <div style="font-weight:bold; color:white;">${d.name}</div>
             <div style="font-size:0.8rem; color:#888;">${d.city} • ${d.rawDate}</div>
@@ -577,7 +627,15 @@ window.editEvent = async (id) => {
         document.getElementById('concertGenre').value = d.genre;
         document.getElementById('concertDateOnly').value = d.rawDate;
         document.getElementById('concertTimeOnly').value = d.time;
-        document.getElementById('concertPrice').value = d.price;
+        
+        document.getElementById('concertCurrency').value = d.currency || 'IDR';
+        
+        // Tampilkan rawPrice
+        document.getElementById('concertPrice').value = d.rawPrice || ''; 
+        
+        // Panggil pemformatan ulang untuk menampilkan harga di input (e.g., 150.000)
+        formatPriceInput(document.getElementById('concertPrice'));
+        
         document.getElementById('concertStatus').value = d.status;
         document.getElementById('concertDetail').value = d.desc;
         

@@ -104,9 +104,18 @@
                         <option value="DJ">DJ</option>
                         <option value="HIPDUT">HIPDUT</option>
                     </select>
-                    <input type="text" id="concertPrice" class="input-dark" placeholder="Harga (Rp)" required>
+                    
+                    <select id="concertCurrency" class="input-dark" style="color:#aaa;">
+                        <option value="IDR">IDR - Rupiah</option>
+                        <option value="USD">USD - Dollar</option>
+                        <option value="TBA">TBA - To Be Announced</option>
+                    </select>
                 </div>
-
+                
+                <div class="form-row" style="display:grid; grid-template-columns:1fr; gap:20px; margin-bottom:20px;">
+                    <input type="text" id="concertPrice" class="input-dark" placeholder="Harga (Contoh: 350.000 atau 50.50)" required>
+                </div>
+                
                 <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
                     <input type="date" id="concertDateOnly" class="input-dark" required style="color:#aaa;">
                     <input type="text" id="concertTimeOnly" class="input-dark" placeholder="Jam (Contoh: 19:00)">

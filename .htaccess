@@ -1,6 +1,7 @@
 # =========================================================
 # FILE .HTACCESS OPTIMAL UNTUK INFOKONSER.WEB.ID (V2)
 # PERBAIKAN: Kompresi Deflate Fix
+# FIXED BY AI: Penambahan Referrer-Policy untuk keamanan
 # =========================================================
 
 # --- 1. Dasar & URL ---
@@ -13,14 +14,17 @@ RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Hapus WWW.
-RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
-RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
+[cite_start]RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC] [cite: 2]
+RewriteRule ^(.*)$ https://%1/$1 [L,R=301] [cite: 2]
 
 # --- 3. Header Keamanan ---
 <IfModule mod_headers.c>
     Header always append X-Frame-Options SAMEORIGIN
     Header set X-XSS-Protection "1; mode=block"
     Header set X-Content-Type-Options nosniff
+    
+    # PENINGKATAN KEAMANAN: Menambahkan Referrer-Policy 
+    [cite_start]Header set Referrer-Policy "strict-origin-when-cross-origin" 
 </IfModule>
 
 # --- 4. Kontrol Cache (Expires) ---
@@ -33,7 +37,7 @@ RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
     ExpiresByType image/jpeg "access 1 year"
     ExpiresByType image/gif "access 1 year"
     ExpiresByType image/png "access 1 year"
-    ExpiresByType image/webp "access 1 year"
+    [cite_start]ExpiresByType image/webp "access 1 year" 
     ExpiresByType application/x-font-woff "access 1 year"
     ExpiresByType application/x-font-ttf "access 1 year"
     
@@ -49,6 +53,7 @@ RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/xml
     AddOutputFilterByType DEFLATE text/css
-    # PERBAIKAN: Menggabungkan baris application/javascript
-    AddOutputFilterByType DEFLATE application/javascript
+    # PERBAIKAN: 
+    [cite_start]Menggabungkan baris application/javascript [cite: 4]
+    [cite_start]AddOutputFilterByType DEFLATE application/javascript [cite: 4]
 </IfModule>
