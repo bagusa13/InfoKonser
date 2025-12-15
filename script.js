@@ -1,12 +1,7 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX V2)
-   SOLUSI FINAL: Menggunakan Event Delegation yang sudah disempurnakan.
-   Ini adalah versi yang paling stabil dan anti-gagal untuk Admin Panel.
-   
-   Perbaikan Kunci:
-   - Menghapus fungsi setupAdminForm() yang konflik (diganti global listeners).
-   - Penargetan elemen 'concertImage' diperkuat.
-   - onsubmit="return false;" ditambahkan ke admin.html.
+   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX V3)
+   SOLUSI FINAL: Menggunakan setAttribute untuk menulis nilai input.
+   Ini adalah cara paling stabil untuk menghindari blokir keamanan di Vercel.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -53,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 1. LISTENER UNTUK UPLOAD GAMBAR (CLOUDINARY)
 document.addEventListener('change', async (e) => {
-    // Cek apakah yang diklik adalah tombol imageInput?
     if (e.target && e.target.id === 'imageInput') {
         const file = e.target.files[0];
         if(!file) return;
@@ -80,7 +74,10 @@ document.addEventListener('change', async (e) => {
                 // SIMPAN LINK KE INPUT TERSEMBUNYI (Perbaikan Penargetan Diperkuat)
                 const hiddenInput = document.getElementById('concertImage');
                 if (hiddenInput) {
-                    hiddenInput.value = link;
+                    // --- SOLUSI ANTI-BLOCK FINAL ---
+                    hiddenInput.setAttribute('value', link); // Metode setAttribute untuk menghindari blokir
+                    hiddenInput.value = link; 
+                    // --- END SOLUSI ANTI-BLOCK FINAL ---
                 } else {
                     alert("FATAL ERROR: Input tersembunyi 'concertImage' tidak ditemukan!");
                     console.error("Input ID 'concertImage' tidak ditemukan di DOM.");
@@ -109,7 +106,6 @@ document.addEventListener('change', async (e) => {
 // 2. LISTENER UNTUK SUBMIT FORM ADMIN
 document.addEventListener('submit', async (e) => {
     if (e.target && e.target.id === 'concertForm') {
-        // e.preventDefault() sudah ada di onsubmit="return false;" di HTML, tapi ditambahkan lagi untuk jaga-jaga
         e.preventDefault(); 
         
         const editId = document.getElementById('editId').value;
@@ -197,7 +193,6 @@ function initAdminPage() {
             loginView.classList.add('hidden');
             adminPanel.classList.remove('hidden');
             loadAdminData();
-            // Tidak perlu setupAdminForm() lagi, karena sudah ditangani Global Listeners
         } else {
             loginView.classList.remove('hidden');
             adminPanel.classList.add('hidden');
