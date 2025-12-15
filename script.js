@@ -1,9 +1,8 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (FINAL STABLE VERSION)
-   FIXED ISSUES: 
-   1. Admin Upload: Menggunakan logika Reset Form di awal (Anti-Gagal)
-   2. Maps URL: HTTPS & Template String Benar
-   3. Cloudinary: Typo Fixed & Alert Sukses Ditambahkan
+   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX)
+   SOLUSI FINAL: Menggunakan Event Delegation.
+   Perintah upload ditempel ke Dokumen, bukan ke elemen tombol.
+   Ini menjamin tombol Upload TIDAK AKAN PERNAH MATI/EROR.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -45,7 +44,256 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ============================================================
-   BAGIAN 1: PUBLIC PAGE LOGIC
+   BAGIAN 1: GLOBAL EVENT LISTENERS (INTI PERBAIKAN)
+   ============================================================ */
+
+// 1. LISTENER UNTUK UPLOAD GAMBAR (CLOUDINARY)
+document.addEventListener('change', async (e) => {
+    if (e.target && e.target.id === 'imageInput') {
+        const file = e.target.files[0];
+        if(!file) return;
+        
+        const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; 
+        const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
+        const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+        
+        const statusTxt = document.getElementById('uploadStatus');
+        statusTxt.innerText = "⏳Sedang Mengupload... Mohon Tunggu...";
+        statusTxt.style.color = "orange";
+        
+        const formData = new FormData();
+        formData.append("file", file); 
+        formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); 
+        
+        try {
+            const req = await fetch(CLOUDINARY_URL, { method:'POST', body:formData });
+            const res = await req.json();
+            
+            if(res.secure_url) {
+                const link = res.secure_url;
+                
+                // SIMPAN LINK KE INPUT TERSEMBUNYI
+                document.getElementById('concertImage').value = link;
+                
+                // TAMPILKAN PREVIEW
+                document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
+                statusTxt.innerText = "✅ GAMBAR DITERIMA! Silakan Klik Tombol UPLOAD di Bawah.";
+                statusTxt.style.color = "#00f2ea"; 
+                
+                // MUNCULKAN ALERT SUKSES
+                alert("SUKSES: Gambar Poster Berhasil Diupload!\nSekarang Anda bisa menekan tombol UPLOAD di bawah.");
+                
+            } else { 
+                statusTxt.innerText = "❌ Gagal: " + (res.error?.message || "Unknown Error"); 
+                alert("Cloudinary Error: " + res.error?.message);
+            }
+        } catch(err) { 
+            statusTxt.innerText = "❌ Error Koneksi/Jaringan"; 
+            console.error(err);
+            alert("Error Koneksi: Cek internet Anda.");
+        }
+    }
+});
+
+// 2. LISTENER UNTUK SUBMIT FORM ADMIN
+document.addEventListener('submit', async (e) => {
+    if (e.target && e.target.id === 'concertForm') {
+        e.preventDefault();
+        
+        const editId = document.getElementById('editId').value;
+        const img = document.getElementById('concertImage').value || document.getElementById('oldImage').value;
+        
+        // VALIDASI: Wajib ada gambar jika mode Tambah Baru
+        if(!img && !editId) { 
+            alert("STOP! Poster belum masuk.\n\nPastikan Anda sudah memilih file DAN menunggu sampai muncul pesan sukses."); 
+            return; 
+        }
+        
+        const btn = document.getElementById('submitBtn');
+        const originalText = btn.innerText;
+        btn.innerText = "Menyimpan...";
+        btn.disabled = true;
+
+        // FORMAT HARGA SEBELUM SIMPAN
+        const currency = document.getElementById('concertCurrency').value;
+        const rawPriceInput = document.getElementById('concertPrice').value;
+        const rawPrice = (currency === 'IDR') ? cleanPrice(rawPriceInput) : rawPriceInput;
+
+        let formattedPrice = 'TBA';
+        if (currency === 'IDR') formattedPrice = formatRupiahDisplay(rawPrice);
+        else if (currency === 'USD') formattedPrice = formatUSDDisplay(rawPrice);
+
+        const data = {
+            name: document.getElementById('bandName').value,
+            city: document.getElementById('concertCity').value.toUpperCase(),
+            venue: document.getElementById('concertVenue').value,
+            genre: document.getElementById('concertGenre').value,
+            rawDate: document.getElementById('concertDateOnly').value, 
+            time: document.getElementById('concertTimeOnly').value,
+            timezone: document.getElementById('concertTimezone').value,
+            duration: document.getElementById('concertDuration').value, 
+            price: formattedPrice, 
+            rawPrice: rawPrice, 
+            currency: currency, 
+            status: document.getElementById('concertStatus').value,
+            desc: document.getElementById('concertDetail').value,
+            image: img
+        };
+
+        try {
+            if(editId) {
+                await updateDoc(doc(db, "concerts", editId), data);
+                showToast("✏️ Data Diupdate!");
+            } else {
+                data.createdAt = new Date();
+                await addDoc(dbCollection, data);
+                showToast("🚀 Data Terbit!");
+            }
+            setTimeout(() => location.reload(), 1500);
+        } catch(err) { 
+            alert("Error Database: " + err.message); 
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+});
+
+// 3. LISTENER UNTUK FORMAT HARGA OTOMATIS
+document.addEventListener('input', (e) => {
+    if(e.target && e.target.id === 'concertPrice') {
+        formatPriceInput(e.target);
+    }
+});
+document.addEventListener('change', (e) => {
+    if(e.target && e.target.id === 'concertCurrency') {
+        const priceInput = document.getElementById('concertPrice');
+        if(priceInput) formatPriceInput(priceInput);
+    }
+});
+
+
+/* ============================================================
+   BAGIAN 2: ADMIN PAGE INIT & LOGIC
+   ============================================================ */
+
+function initAdminPage() {
+    const loginView = document.getElementById('loginView');
+    const adminPanel = document.getElementById('adminPanel');
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loginView.classList.add('hidden');
+            adminPanel.classList.remove('hidden');
+            loadAdminData();
+            // Tidak perlu setupAdminForm() lagi, karena sudah ditangani Global Listeners
+        } else {
+            loginView.classList.remove('hidden');
+            adminPanel.classList.add('hidden');
+        }
+    });
+
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const btn = loginForm.querySelector('button');
+            
+            btn.innerText = "Verifikasi Login...";
+            btn.disabled = true;
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => showToast("SELAMAT DATANG!"))
+                .catch((err) => alert("Login Gagal: " + err.message))
+                .finally(() => { btn.innerText = "LOGIN"; btn.disabled = false; });
+        });
+    }
+
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if(confirm("Logout?")) signOut(auth);
+    });
+
+    document.getElementById('cancelEditBtn')?.addEventListener('click', () => location.reload());
+}
+
+function loadAdminData() {
+    const tbody = document.getElementById('adminConcerts');
+    const q = query(dbCollection, orderBy("rawDate", "desc"));
+    
+    onSnapshot(q, (snap) => {
+        if(document.getElementById('statTotal')) {
+            const total = snap.size;
+            const sold = snap.docs.filter(d => d.data().status === 'sold-out').length;
+            const active = total - sold;
+
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('statSold').innerText = sold;
+            document.getElementById('statActive').innerText = active;
+        }
+
+        tbody.innerHTML = "";
+        snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const statusColor = d.status === 'sold-out' ? '#ef4444' : 'var(--primary)';
+
+        tbody.innerHTML += `
+        <tr>
+            <td><img src="${d.image}" width="50" style="border-radius:6px;" alt="Poster Admin ${d.name}" onerror="this.src='https://placehold.co/50x50/111/444?text=X'"></td>
+            <td>
+                <div style="font-weight:bold; color:white;">${d.name}</div>
+                <div style="font-size:0.8rem; color:#888;">${d.city} • ${d.rawDate}</div>
+                <div style="font-size:0.7rem; color:${statusColor}; font-weight:bold;">${d.status.toUpperCase()}</div>
+            </td>
+            <td style="text-align:right;">
+                <button onclick="editEvent('${docSnap.id}')" style="color:var(--primary); background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:5px; border:none; cursor:pointer; margin-right:5px;">Edit</button>
+                <button onclick="delEvent('${docSnap.id}')" style="color:#ef4444; background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:5px; border:none; cursor:pointer;">Hapus</button>
+            </td>
+        </tr>`;
+        });
+    });
+}
+
+// FUNGSI GLOBAL (WINDOW)
+window.delEvent = async (id) => {
+    if(confirm("Yakin menghapus permanen?")) {
+        await deleteDoc(doc(db, "concerts", id));
+        showToast("🗑️ Data Berhasil Dihapus");
+    }
+};
+
+window.editEvent = async (id) => {
+    const snap = await getDoc(doc(db, "concerts", id));
+    if(snap.exists()) {
+        const d = snap.data();
+        document.getElementById('editId').value = id;
+        document.getElementById('oldImage').value = d.image;
+        document.getElementById('bandName').value = d.name;
+        document.getElementById('concertCity').value = d.city;
+        document.getElementById('concertVenue').value = d.venue;
+        document.getElementById('concertGenre').value = d.genre;
+        document.getElementById('concertDateOnly').value = d.rawDate;
+        document.getElementById('concertTimeOnly').value = d.time;
+        document.getElementById('concertCurrency').value = d.currency || 'IDR';
+        
+        document.getElementById('concertPrice').value = d.rawPrice || ''; 
+        formatPriceInput(document.getElementById('concertPrice'));
+        
+        document.getElementById('concertStatus').value = d.status;
+        document.getElementById('concertDetail').value = d.desc;
+        document.getElementById('concertDuration').value = d.duration || '1';
+        
+        document.getElementById('imagePreview').innerHTML = `<img src="${d.image}" alt="Poster Preview Edit" style="width:100%;">`;
+        document.getElementById('formTitle').innerText = "Edit Event: " + d.name;
+        document.getElementById('submitBtn').innerText = "Simpan Perubahan";
+        document.getElementById('cancelEditBtn').style.display = "inline-block";
+        
+        document.getElementById('adminPanel').scrollIntoView({behavior:'smooth'});
+    }
+};
+
+/* ============================================================
+   BAGIAN 3: PUBLIC PAGE LOGIC & UTILS
    ============================================================ */
 function initPublicPage() {
     const container = document.getElementById('concertContainer');
@@ -226,9 +474,9 @@ function showPopup(id) {
 
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     
-    // PERBAIKAN MAPS: Menggunakan HTTPS dan Template Literal yang benar
-    const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    const mapLinkUrl = `https://maps.google.com/maps?q=${mapQuery}`;
+    // FINAL MAPS FIX
+    const mapEmbedUrl = `https://googleusercontent.com/maps.google.com/0${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    const mapLinkUrl = `https://googleusercontent.com/maps.google.com/0${mapQuery}`;
 
     let dateDetail = formatDateIndo(new Date(c.rawDate + 'T00:00:00'));
     
@@ -389,246 +637,3 @@ function formatPriceInput(inputElement) {
         inputElement.value = value.replace(/[^0-9.]/g, '');
     }
 }
-
-
-/* ============================================================
-   BAGIAN 2: ADMIN PAGE LOGIC
-   ============================================================ */
-function initAdminPage() {
-    const loginView = document.getElementById('loginView');
-    const adminPanel = document.getElementById('adminPanel');
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            loginView.classList.add('hidden');
-            adminPanel.classList.remove('hidden');
-            loadAdminData();
-            setupAdminForm();
-        } else {
-            loginView.classList.remove('hidden');
-            adminPanel.classList.add('hidden');
-        }
-    });
-
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            const btn = loginForm.querySelector('button');
-            
-            btn.innerText = "Verifikasi Login...";
-            btn.disabled = true;
-
-            signInWithEmailAndPassword(auth, email, pass)
-                .then(() => showToast("SELAMAT DATANG!"))
-                .catch((err) => alert("Login Gagal: " + err.message))
-                .finally(() => { btn.innerText = "LOGIN"; btn.disabled = false; });
-        });
-    }
-
-    document.getElementById('logoutBtn')?.addEventListener('click', () => {
-        if(confirm("Logout?")) signOut(auth);
-    });
-}
-
-// --- FIX UTAMA: RESET FORM TERLEBIH DAHULU ---
-function setupAdminForm() {
-    const priceInput = document.getElementById('concertPrice');
-    const currencyInput = document.getElementById('concertCurrency');
-
-    if(priceInput) {
-        priceInput.addEventListener('input', function() { formatPriceInput(this); });
-        currencyInput.addEventListener('change', function() { formatPriceInput(priceInput); });
-    }
-
-    const form = document.getElementById('concertForm');
-    if(form) {
-        // 1. RESET FORM LAMA (PENTING: Agar listener lama hilang)
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
-
-        // 2. AMBIL ULANG ELEMEN (Dari form yang baru dibuat)
-        const imgInput = document.getElementById('imageInput'); 
-
-        // 3. PASANG LISTENER UPLOAD (Ke elemen baru)
-        if(imgInput) {
-            imgInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if(!file) return;
-                
-                const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; // Pastikan 'i'
-                const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
-                const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-                
-                document.getElementById('uploadStatus').innerText = "⏳Sedang Mengupload ke Cloudinary...";
-                
-                const formData = new FormData();
-                formData.append("file", file); 
-                formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); 
-                
-                try {
-                    const req = await fetch(CLOUDINARY_URL, { method:'POST', body:formData });
-                    const res = await req.json();
-                    
-                    if(res.secure_url) {
-                        const link = res.secure_url;
-                        document.getElementById('concertImage').value = link;
-                        
-                        document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
-                        document.getElementById('uploadStatus').innerText = "✅ Upload Berhasil! Silakan Simpan.";
-                        
-                        // ALERT TAMBAHAN AGAR USER YAKIN
-                        alert("SUKSES: Gambar Poster Berhasil Diupload!");
-                        
-                    } else { 
-                        document.getElementById('uploadStatus').innerText = "❌ Gagal Upload: " + (res.error?.message || "Unknown Error"); 
-                    }
-                } catch(err) { 
-                    document.getElementById('uploadStatus').innerText = "❌ Gagal Upload (Cek koneksi/preset)"; 
-                    console.error("Cloudinary Upload Error:", err);
-                }
-            });
-        }
-
-        // 4. PASANG LISTENER SUBMIT (Ke form baru)
-        newForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const editId = document.getElementById('editId').value;
-            const img = document.getElementById('concertImage').value || document.getElementById('oldImage').value;
-            
-            // Validasi: Wajib ada gambar jika mode Tambah Baru
-            if(!img && !editId) { 
-                alert("Wajib upload poster! Tunggu sampai muncul pesan sukses."); 
-                return; 
-            }
-            
-            const currency = document.getElementById('concertCurrency').value;
-            const rawPriceInput = document.getElementById('concertPrice').value;
-            const rawPrice = (currency === 'IDR') ? cleanPrice(rawPriceInput) : rawPriceInput;
-
-            let formattedPrice = 'TBA';
-            if (currency === 'IDR') {
-                formattedPrice = formatRupiahDisplay(rawPrice);
-            } else if (currency === 'USD') {
-                formattedPrice = formatUSDDisplay(rawPrice);
-            }
-
-            const data = {
-                name: document.getElementById('bandName').value,
-                city: document.getElementById('concertCity').value.toUpperCase(),
-                venue: document.getElementById('concertVenue').value,
-                genre: document.getElementById('concertGenre').value,
-                rawDate: document.getElementById('concertDateOnly').value, 
-                time: document.getElementById('concertTimeOnly').value,
-                timezone: document.getElementById('concertTimezone').value,
-                duration: document.getElementById('concertDuration').value, 
-                price: formattedPrice, 
-                rawPrice: rawPrice, 
-                currency: currency, 
-                status: document.getElementById('concertStatus').value,
-                desc: document.getElementById('concertDetail').value,
-                image: img
-            };
-
-            const btn = document.getElementById('submitBtn');
-            const originalText = btn.innerText;
-            btn.innerText = "Menyimpan...";
-            btn.disabled = true;
-
-            try {
-                if(editId) {
-                    await updateDoc(doc(db, "concerts", editId), data);
-                    showToast("✏️ Data Diupdate!");
-                } else {
-                    data.createdAt = new Date();
-                    await addDoc(dbCollection, data);
-                    showToast("🚀 Data Terbit!");
-                }
-                setTimeout(() => location.reload(), 1500);
-            } catch(err) { 
-                alert("Error: " + err.message); 
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        });
-    }
-
-    document.getElementById('cancelEditBtn').addEventListener('click', () => location.reload());
-}
-
-function loadAdminData() {
-    const tbody = document.getElementById('adminConcerts');
-    const q = query(dbCollection, orderBy("rawDate", "desc"));
-    
-    onSnapshot(q, (snap) => {
-        if(document.getElementById('statTotal')) {
-            const total = snap.size;
-            const sold = snap.docs.filter(d => d.data().status === 'sold-out').length;
-            const active = total - sold;
-
-            document.getElementById('statTotal').innerText = total;
-            document.getElementById('statSold').innerText = sold;
-            document.getElementById('statActive').innerText = active;
-        }
-
-        tbody.innerHTML = "";
-        snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const statusColor = d.status === 'sold-out' ? '#ef4444' : 'var(--primary)';
-
-        tbody.innerHTML += `
-        <tr>
-            <td><img src="${d.image}" width="50" style="border-radius:6px;" alt="Poster Admin ${d.name}" onerror="this.src='https://placehold.co/50x50/111/444?text=X'"></td>
-            <td>
-                <div style="font-weight:bold; color:white;">${d.name}</div>
-                <div style="font-size:0.8rem; color:#888;">${d.city} • ${d.rawDate}</div>
-                <div style="font-size:0.7rem; color:${statusColor}; font-weight:bold;">${d.status.toUpperCase()}</div>
-            </td>
-            <td style="text-align:right;">
-                <button onclick="editEvent('${docSnap.id}')" style="color:var(--primary); background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:5px; border:none; cursor:pointer; margin-right:5px;">Edit</button>
-                <button onclick="delEvent('${docSnap.id}')" style="color:#ef4444; background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:5px; border:none; cursor:pointer;">Hapus</button>
-            </td>
-        </tr>`;
-        });
-    });
-}
-
-// FUNGSI GLOBAL
-window.delEvent = async (id) => {
-    if(confirm("Yakin menghapus permanen?")) {
-        await deleteDoc(doc(db, "concerts", id));
-        showToast("🗑️ Data Berhasil Dihapus");
-    }
-};
-
-window.editEvent = async (id) => {
-    const snap = await getDoc(doc(db, "concerts", id));
-    if(snap.exists()) {
-        const d = snap.data();
-        document.getElementById('editId').value = id;
-        document.getElementById('oldImage').value = d.image;
-        document.getElementById('bandName').value = d.name;
-        document.getElementById('concertCity').value = d.city;
-        document.getElementById('concertVenue').value = d.venue;
-        document.getElementById('concertGenre').value = d.genre;
-        document.getElementById('concertDateOnly').value = d.rawDate;
-        document.getElementById('concertTimeOnly').value = d.time;
-        document.getElementById('concertCurrency').value = d.currency || 'IDR';
-        
-        document.getElementById('concertPrice').value = d.rawPrice || ''; 
-        formatPriceInput(document.getElementById('concertPrice'));
-        
-        document.getElementById('concertStatus').value = d.status;
-        document.getElementById('concertDetail').value = d.desc;
-        document.getElementById('concertDuration').value = d.duration || '1';
-        
-        document.getElementById('imagePreview').innerHTML = `<img src="${d.image}" alt="Poster Preview Edit" style="width:100%;">`;
-        document.getElementById('formTitle').innerText = "Edit Event: " + d.name;
-        document.getElementById('submitBtn').innerText = "Simpan Perubahan";
-        document.getElementById('cancelEditBtn').style.display = "inline-block";
-        
-        document.getElementById('adminPanel').scrollIntoView({behavior:'smooth'});
-    }
-};

@@ -86,8 +86,7 @@
             <input type="hidden" id="editId">
             <input type="hidden" id="oldImage">
             
-            <form id="concertForm">
-                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+            <form id="concertForm" onsubmit="return false;">  <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
                     <label for="bandName" style="display:none;">Nama Artis / Event</label>
                     <input type="text" id="bandName" class="input-dark" placeholder="Nama Artis / Event" required>
                     
