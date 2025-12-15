@@ -1,12 +1,9 @@
 /* ============================================================
    INFOKONSER.ID - ENGINE V3 (FINAL FIXED & CLOUD READY)
    FIXED ISSUES: 
-   1. URL Google Maps (HTTPS & Format Benar) <--- BARU DIPERBAIKI
-   2. Format Mata Uang USD (Intl.NumberFormat)
-   3. Logika Tanggal (Parsing Lokal - Mencegah "Selesai" Prematur)
-   4. Validasi Admin Form (Hanya Wajib Upload saat Add Event)
-   5. Aksesibilitas Gambar (Alt Text & Placeholder Gelap)
-   6. Cloudinary Preset Integration
+   1. Admin Upload Logic (CloneNode Reordered) -> SOLVED "Wajib Upload Poster"
+   2. URL Google Maps (HTTPS & Template String) -> SOLVED Peta Blank
+   3. Cloudinary Config -> SOLVED Typo Cloud Name
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -16,7 +13,6 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; 
 
 // --- CONFIG FIREBASE ---
-// Pastikan Domain Locking sudah aktif di Google Cloud Console untuk keamanan API Key ini.
 const firebaseConfig = {
     apiKey: "AIzaSyB2qifqZl1IWKX3YFwc6rxObkww-GHhOIM", 
     authDomain: "infokonser-app.firebaseapp.com",
@@ -53,8 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
    ============================================================ */
 function initPublicPage() {
     const container = document.getElementById('concertContainer');
-    // Isu #3 (Optimasi): Query dasar. Pagination dilakukan di client-side (slice).
-    // Untuk data >1000, pertimbangkan limit() di Firestore query kedepannya.
     const q = query(dbCollection, orderBy("rawDate", "asc"));
     
     container.innerHTML = '<div style="color:#666; text-align:center; grid-column:1/-1; padding:50px;">Memuat data...</div>';
@@ -72,7 +66,6 @@ function initPublicPage() {
     }
 
     container.addEventListener('click', (e) => {
-        // Isu #18 (Efisiensi): Menggunakan referensi tombol langsung
         const wishBtn = e.target.closest('.btn-wishlist');
         if (wishBtn) { e.stopPropagation(); toggleWishlist(wishBtn.dataset.id, wishBtn); return; }
 
@@ -109,8 +102,7 @@ function renderGrid(data, isLoadMore = false) {
     const now = new Date(); now.setHours(0,0,0,0);
 
     slicedData.forEach((c, index) => {
-        // Isu #19 (FIX LOGIKA TANGGAL): Menambahkan T00:00:00 agar diparsing sebagai waktu lokal
-        // Ini mencegah event hari ini dianggap sudah selesai karena perbedaan zona waktu UTC.
+        // Fix Logika Tanggal
         const startDate = new Date(c.rawDate + 'T00:00:00');
         const isFinished = startDate < now;
         
@@ -131,7 +123,6 @@ function renderGrid(data, isLoadMore = false) {
         const heartActive = isLoved ? "active" : "";
         const delay = index * 0.05;
 
-        // Isu #10 & #11 (FIX GAMBAR): Menambahkan Alt Text & Placeholder Gelap
         const html = `
         <article class="card" style="animation-delay: ${delay}s">
             <div class="card-img-wrap">
@@ -211,7 +202,6 @@ function toggleWishlist(id, btnElement = null) {
     
     localStorage.setItem('infokonser_wishlist', JSON.stringify(wishlist));
     
-    // Isu #18: Menggunakan elemen tombol yang diteruskan (jika ada) untuk performa
     const btn = btnElement || document.querySelector(`.btn-wishlist[data-id="${id}"]`);
     if(btn) {
         btn.classList.toggle('active');
@@ -219,8 +209,6 @@ function toggleWishlist(id, btnElement = null) {
     }
 
     showToast(msg);
-    
-    // Isu #15: Hanya render ulang grid jika sedang di tab Favorite untuk menghindari flash
     const activeFilter = document.querySelector('.filter-btn.active');
     if(activeFilter && activeFilter.dataset.filter === 'FAVORITE') {
         applyFilter('FAVORITE');
@@ -239,13 +227,12 @@ function showPopup(id) {
 
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     
-    // PERBAIKAN FINAL MAPS URL: Menggunakan HTTPS dan Sintaks Template String yang Benar
+    // --- FIX MAPS URL: HTTPS & SINTAKS BENAR ---
     const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
     const mapLinkUrl = `https://maps.google.com/maps?q=${mapQuery}`;
 
     let dateDetail = formatDateIndo(new Date(c.rawDate + 'T00:00:00'));
     
-    // Isu #13 (FIX DURASI): Menampilkan info durasi jika event lebih dari 1 hari
     if (c.duration && parseInt(c.duration) > 1) {
         dateDetail += ` (${c.duration} Hari)`;
     }
@@ -371,7 +358,6 @@ function formatRupiahDisplay(number) {
     }).format(cleanNumber);
 }
 
-// Isu #2 (FIX FORMAT USD): Menggunakan Intl.NumberFormat
 function formatUSDDisplay(number) {
     if (!number) return 'TBA';
     const cleanNumber = number.toString().replace(/[^0-9.]/g, ''); 
@@ -448,6 +434,7 @@ function initAdminPage() {
     });
 }
 
+// --- FIX UTAMA: SETUP ADMIN FORM (REORDERED CLONENODE) ---
 function setupAdminForm() {
     const priceInput = document.getElementById('concertPrice');
     const currencyInput = document.getElementById('concertCurrency');
@@ -457,57 +444,60 @@ function setupAdminForm() {
         currencyInput.addEventListener('change', function() { formatPriceInput(priceInput); });
     }
 
-    // CLOUDINARY UPLOAD LOGIC
-    // Menggunakan Upload Preset "InfoKonser" (Unsigned)
-    const imgInput = document.getElementById('imageInput');
-    if(imgInput) {
-        imgInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
-            
-            const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; // Cloud Name Anda
-            const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; // Preset yang sudah Anda buat
-            const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-            
-            document.getElementById('uploadStatus').innerText = "⏳Sedang Mengupload ke Cloudinary...";
-            
-            const formData = new FormData();
-            formData.append("file", file); 
-            formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); 
-            
-            try {
-                const req = await fetch(CLOUDINARY_URL, { method:'POST', body:formData });
-                const res = await req.json();
-                
-                if(res.secure_url) {
-                    const link = res.secure_url;
-                    document.getElementById('concertImage').value = link;
-                    document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
-                    document.getElementById('uploadStatus').innerText = "✅ Selamat Upload Image Berhasil di Cloudinary";
-                } else { 
-                    document.getElementById('uploadStatus').innerText = "❌ Gagal Upload: " + (res.error?.message || "Unknown Error"); 
-                }
-            } catch(err) { 
-                document.getElementById('uploadStatus').innerText = "❌ Gagal Upload (Cek koneksi/preset)"; 
-                console.error("Cloudinary Upload Error:", err);
-            }
-        });
-    }
-
-    // Submit Form (Add/Edit)
     const form = document.getElementById('concertForm');
     if(form) {
+        // 1. CLONE FORM DULUAN (Hapus listener lama)
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
+
+        // 2. SET UP CLOUDINARY UPLOAD (Ke elemen baru)
+        const imgInput = document.getElementById('imageInput'); 
         
+        if(imgInput) {
+            imgInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                
+                // Config Benar (Huruf 'i' bukan 'l')
+                const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; 
+                const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
+                const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+                
+                document.getElementById('uploadStatus').innerText = "⏳Sedang Mengupload ke Cloudinary...";
+                
+                const formData = new FormData();
+                formData.append("file", file); 
+                formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); 
+                
+                try {
+                    const req = await fetch(CLOUDINARY_URL, { method:'POST', body:formData });
+                    const res = await req.json();
+                    
+                    if(res.secure_url) {
+                        const link = res.secure_url;
+                        document.getElementById('concertImage').value = link;
+                        
+                        document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
+                        document.getElementById('uploadStatus').innerText = "✅ Selamat Upload Image Berhasil di Cloudinary";
+                    } else { 
+                        document.getElementById('uploadStatus').innerText = "❌ Gagal Upload: " + (res.error?.message || "Unknown Error"); 
+                    }
+                } catch(err) { 
+                    document.getElementById('uploadStatus').innerText = "❌ Gagal Upload (Cek koneksi/preset)"; 
+                    console.error("Cloudinary Upload Error:", err);
+                }
+            });
+        }
+
+        // 3. SET UP SUBMIT LISTENER (Ke form baru)
         newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
             const img = document.getElementById('concertImage').value || document.getElementById('oldImage').value;
             
-            // Isu #7 (FIX VALIDASI FORM): Hanya wajib upload gambar jika Add Event baru
+            // Validasi: Pastikan gambar ada untuk data baru
             if(!img && !editId) { 
-                alert("Wajib upload poster!"); 
+                alert("Wajib upload poster! Tunggu sampai teks hijau muncul."); 
                 return; 
             }
             
@@ -519,7 +509,7 @@ function setupAdminForm() {
             if (currency === 'IDR') {
                 formattedPrice = formatRupiahDisplay(rawPrice);
             } else if (currency === 'USD') {
-                formattedPrice = formatUSDDisplay(rawPrice); // Isu #2: Fix Format USD
+                formattedPrice = formatUSDDisplay(rawPrice);
             }
 
             const data = {
@@ -539,6 +529,11 @@ function setupAdminForm() {
                 image: img
             };
 
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "Menyimpan...";
+            btn.disabled = true;
+
             try {
                 if(editId) {
                     await updateDoc(doc(db, "concerts", editId), data);
@@ -549,7 +544,11 @@ function setupAdminForm() {
                     showToast("🚀 Data Terbit!");
                 }
                 setTimeout(() => location.reload(), 1500);
-            } catch(err) { alert("Error: " + err.message); }
+            } catch(err) { 
+                alert("Error: " + err.message); 
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         });
     }
 
@@ -576,7 +575,6 @@ function loadAdminData() {
         const d = docSnap.data();
         const statusColor = d.status === 'sold-out' ? '#ef4444' : 'var(--primary)';
 
-        // Isu #12 (FIX PLACEHOLDER ADMIN): Menggunakan URL placeholder eksternal yang stabil
         tbody.innerHTML += `
         <tr>
             <td><img src="${d.image}" width="50" style="border-radius:6px;" alt="Poster Admin ${d.name}" onerror="this.src='https://placehold.co/50x50/111/444?text=X'"></td>
@@ -594,7 +592,7 @@ function loadAdminData() {
     });
 }
 
-// FUNGSI GLOBAL (Attach ke window agar bisa dipanggil onclick HTML)
+// FUNGSI GLOBAL
 window.delEvent = async (id) => {
     if(confirm("Yakin menghapus permanen?")) {
         await deleteDoc(doc(db, "concerts", id));
@@ -616,7 +614,6 @@ window.editEvent = async (id) => {
         document.getElementById('concertTimeOnly').value = d.time;
         document.getElementById('concertCurrency').value = d.currency || 'IDR';
         
-        // Isu #14 (FIX HARGA EDIT): Pastikan rawPrice ditampilkan agar mudah diedit
         document.getElementById('concertPrice').value = d.rawPrice || ''; 
         formatPriceInput(document.getElementById('concertPrice'));
         
@@ -632,4 +629,3 @@ window.editEvent = async (id) => {
         document.getElementById('adminPanel').scrollIntoView({behavior:'smooth'});
     }
 };
-}
