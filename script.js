@@ -1,9 +1,9 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (FINAL FIXED & CLOUD READY)
+   INFOKONSER.ID - ENGINE V3 (FINAL STABLE VERSION)
    FIXED ISSUES: 
-   1. Admin Upload Logic (CloneNode Reordered) -> SOLVED "Wajib Upload Poster"
-   2. URL Google Maps (HTTPS & Template String) -> SOLVED Peta Blank
-   3. Cloudinary Config -> SOLVED Typo Cloud Name
+   1. Admin Upload: Menggunakan logika Reset Form di awal (Anti-Gagal)
+   2. Maps URL: HTTPS & Template String Benar
+   3. Cloudinary: Typo Fixed & Alert Sukses Ditambahkan
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -30,8 +30,8 @@ const dbCollection = collection(db, "concerts");
 // GLOBAL VARIABLES
 let concerts = []; 
 let wishlist = JSON.parse(localStorage.getItem('infokonser_wishlist')) || [];
-let currentLimit = 12; // LIMIT AWAL
-let currentData = [];  // Data yang sedang aktif
+let currentLimit = 12; 
+let currentData = [];  
 
 // --- MAIN ROUTER ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -102,7 +102,6 @@ function renderGrid(data, isLoadMore = false) {
     const now = new Date(); now.setHours(0,0,0,0);
 
     slicedData.forEach((c, index) => {
-        // Fix Logika Tanggal
         const startDate = new Date(c.rawDate + 'T00:00:00');
         const isFinished = startDate < now;
         
@@ -227,7 +226,7 @@ function showPopup(id) {
 
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     
-    // --- FIX MAPS URL: HTTPS & SINTAKS BENAR ---
+    // PERBAIKAN MAPS: Menggunakan HTTPS dan Template Literal yang benar
     const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
     const mapLinkUrl = `https://maps.google.com/maps?q=${mapQuery}`;
 
@@ -343,7 +342,7 @@ function showToast(msg) {
     setTimeout(() => { if (!toast.classList.contains('show')) { toast.style.opacity = '0'; } }, 3500); 
 }
 
-// UTILS HARGA BARU
+// UTILS HARGA
 function cleanPrice(value) {
     return value.replace(/[^0-9]/g, '');
 }
@@ -434,7 +433,7 @@ function initAdminPage() {
     });
 }
 
-// --- FIX UTAMA: SETUP ADMIN FORM (REORDERED CLONENODE) ---
+// --- FIX UTAMA: RESET FORM TERLEBIH DAHULU ---
 function setupAdminForm() {
     const priceInput = document.getElementById('concertPrice');
     const currencyInput = document.getElementById('concertCurrency');
@@ -446,20 +445,20 @@ function setupAdminForm() {
 
     const form = document.getElementById('concertForm');
     if(form) {
-        // 1. CLONE FORM DULUAN (Hapus listener lama)
+        // 1. RESET FORM LAMA (PENTING: Agar listener lama hilang)
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
 
-        // 2. SET UP CLOUDINARY UPLOAD (Ke elemen baru)
+        // 2. AMBIL ULANG ELEMEN (Dari form yang baru dibuat)
         const imgInput = document.getElementById('imageInput'); 
-        
+
+        // 3. PASANG LISTENER UPLOAD (Ke elemen baru)
         if(imgInput) {
             imgInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if(!file) return;
                 
-                // Config Benar (Huruf 'i' bukan 'l')
-                const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; 
+                const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; // Pastikan 'i'
                 const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
                 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
                 
@@ -478,7 +477,11 @@ function setupAdminForm() {
                         document.getElementById('concertImage').value = link;
                         
                         document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
-                        document.getElementById('uploadStatus').innerText = "✅ Selamat Upload Image Berhasil di Cloudinary";
+                        document.getElementById('uploadStatus').innerText = "✅ Upload Berhasil! Silakan Simpan.";
+                        
+                        // ALERT TAMBAHAN AGAR USER YAKIN
+                        alert("SUKSES: Gambar Poster Berhasil Diupload!");
+                        
                     } else { 
                         document.getElementById('uploadStatus').innerText = "❌ Gagal Upload: " + (res.error?.message || "Unknown Error"); 
                     }
@@ -489,15 +492,15 @@ function setupAdminForm() {
             });
         }
 
-        // 3. SET UP SUBMIT LISTENER (Ke form baru)
+        // 4. PASANG LISTENER SUBMIT (Ke form baru)
         newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
             const img = document.getElementById('concertImage').value || document.getElementById('oldImage').value;
             
-            // Validasi: Pastikan gambar ada untuk data baru
+            // Validasi: Wajib ada gambar jika mode Tambah Baru
             if(!img && !editId) { 
-                alert("Wajib upload poster! Tunggu sampai teks hijau muncul."); 
+                alert("Wajib upload poster! Tunggu sampai muncul pesan sukses."); 
                 return; 
             }
             
