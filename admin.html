@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin Panel - InfoKonser</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
@@ -33,9 +33,11 @@
             <p style="color:#888; margin-bottom:30px; font-size:0.9rem;">Hi, Selamat datang di panel admin!!</p>
             
             <form id="loginForm">
+                <label for="username" style="display:none;">Email / Username</label>
                 <input type="text" id="username" class="input-dark" placeholder="Email / Username" required>
                 
                 <div style="position:relative;">
+                    <label for="password" style="display:none;">Password</label>
                     <input 
                     type="password" 
                     id="password" 
@@ -48,7 +50,7 @@
                     autocapitalize="off" 
                     spellcheck="false"
                 >
-                    <i id="togglePass" class="fas fa-eye" style="position:absolute; right:15px; top:15px; color:#666; cursor:pointer; font-size: 1rem; z-index: 10;"></i>
+                    <i id="togglePass" class="fas fa-eye" style="position:absolute; right:15px; top:15px; color:#666; cursor:pointer; font-size: 1rem; z-index: 10;" aria-label="Tampilkan Password"></i>
                 </div>
 
                 <button type="submit" class="btn-primary" style="width:100%; justify-content:center; margin-top: 10px;">LOGIN</button>
@@ -86,13 +88,19 @@
             
             <form id="concertForm">
                 <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <label for="bandName" style="display:none;">Nama Artis / Event</label>
                     <input type="text" id="bandName" class="input-dark" placeholder="Nama Artis / Event" required>
+                    
+                    <label for="concertCity" style="display:none;">Kota</label>
                     <input type="text" id="concertCity" class="input-dark" placeholder="Kota (Contoh: JAKARTA)" required>
                 </div>
                 
                 <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <label for="concertVenue" style="display:none;">Nama Venue/Lokasi</label>
                     <input type="text" id="concertVenue" class="input-dark" placeholder="Nama Venue/Lokasi" required>
-                    <select id="concertGenre" class="input-dark" style="color:#aaa;">
+                    
+                    <label for="concertGenre" style="display:none;">Genre Konser</label>
+                    <select id="concertGenre" class="input-dark" style="color:#aaa;" aria-label="Genre Konser">
                         <option value="ROCK">ROCK</option>
                         <option value="POP">POP</option>
                         <option value="JAZZ">JAZZ</option>
@@ -105,7 +113,8 @@
                         <option value="HIPDUT">HIPDUT</option>
                     </select>
                     
-                    <select id="concertCurrency" class="input-dark" style="color:#aaa;">
+                    <label for="concertCurrency" style="display:none;">Mata Uang</label>
+                    <select id="concertCurrency" class="input-dark" style="color:#aaa;" aria-label="Mata Uang">
                         <option value="IDR">IDR - Rupiah</option>
                         <option value="USD">USD - Dollar</option>
                         <option value="TBA">TBA - To Be Announced</option>
@@ -113,13 +122,19 @@
                 </div>
                 
                 <div class="form-row" style="display:grid; grid-template-columns:1fr; gap:20px; margin-bottom:20px;">
+                    <label for="concertPrice" style="display:none;">Harga</label>
                     <input type="text" id="concertPrice" class="input-dark" placeholder="Harga (Contoh: 350.000 atau 50.50)" required>
                 </div>
                 
                 <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <label for="concertDateOnly" style="display:none;">Tanggal Konser</label>
                     <input type="date" id="concertDateOnly" class="input-dark" required style="color:#aaa;">
+                    
+                    <label for="concertTimeOnly" style="display:none;">Jam Konser</label>
                     <input type="text" id="concertTimeOnly" class="input-dark" placeholder="Jam (Contoh: 19:00)">
-                    <select id="concertTimezone" class="input-dark" style="color:#aaa;">
+                    
+                    <label for="concertTimezone" style="display:none;">Zona Waktu</label>
+                    <select id="concertTimezone" class="input-dark" style="color:#aaa;" aria-label="Zona Waktu">
                         <option value="WIB">WIB</option>
                         <option value="WITA">WITA</option>
                         <option value="WIT">WIT</option>
@@ -127,8 +142,11 @@
                 </div>
 
                 <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <label for="concertDuration" style="display:none;">Durasi (Hari)</label>
                     <input type="number" id="concertDuration" class="input-dark" value="1" placeholder="Durasi (Hari)">
-                    <select id="concertStatus" class="input-dark" style="color:#aaa;">
+                    
+                    <label for="concertStatus" style="display:none;">Status Tiket</label>
+                    <select id="concertStatus" class="input-dark" style="color:#aaa;" aria-label="Status Tiket">
                         <option value="available">Tersedia</option>
                         <option value="sold-out">Sold Out</option>
                         <option value="limited">Limited</option>
@@ -136,13 +154,14 @@
                 </div>
 
                 <div style="margin-bottom:25px; border: 1px dashed var(--border); padding: 20px; border-radius: 12px; text-align:center;">
-                    <label style="color:#888; font-size:0.9rem; margin-bottom:10px; display:block;">Upload Poster Event</label>
+                    <label for="imageInput" style="color:#888; font-size:0.9rem; margin-bottom:10px; display:block;">Upload Poster Event</label>
                     <input type="file" id="imageInput" class="input-dark" style="margin-bottom:5px;">
                     <p id="uploadStatus" style="font-size:0.8rem; margin-top:5px; color:#666;"></p>
                     <input type="hidden" id="concertImage">
                     <div id="imagePreview" style="margin-top:10px; max-width: 200px; margin-left:auto; margin-right:auto;"></div>
                 </div>
 
+                <label for="concertDetail" style="display:none;">Deskripsi Konser</label>
                 <textarea id="concertDetail" class="input-dark" rows="5" placeholder="Deskripsi konser (Line up, Aturan, dll)" required style="margin-bottom:25px;"></textarea>
 
                 <div style="display:flex; gap:15px; margin-top: 10px;">
@@ -166,7 +185,7 @@
         </div>
     </section>
 
-    <div id="toast" class="toast-container">
+    <div id="toast" class="toast-container" role="alert" aria-live="assertive">
         <i class="fas fa-check-circle toast-icon"></i>
         <span id="toastMsg" class="toast-msg">Berhasil!</span>
     </div>

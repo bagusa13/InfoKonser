@@ -1,7 +1,6 @@
 # =========================================================
-# FILE .HTACCESS OPTIMAL UNTUK INFOKONSER.WEB.ID (V2)
-# PERBAIKAN: Kompresi Deflate Fix
-# FIXED BY AI: Penambahan Referrer-Policy untuk keamanan
+# FILE .HTACCESS OPTIMAL UNTUK INFOKONSER.WEB.ID (FINAL FIXED)
+# FIXED: Caching HTML/Aset Lengkap & X-Frame Syntax
 # =========================================================
 
 # --- 1. Dasar & URL ---
@@ -13,18 +12,24 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Hapus WWW.
-[cite_start]RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC] [cite: 2]
-RewriteRule ^(.*)$ https://%1/$1 [L,R=301] [cite: 2]
+# Hapus WWW. (Redirect www.infokonser.web.id ke infokonser.web.id)
+RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
 
 # --- 3. Header Keamanan ---
 <IfModule mod_headers.c>
-    Header always append X-Frame-Options SAMEORIGIN
+    # PERBAIKAN ISU #16: Menggunakan 'set' bukan 'append' untuk stabilitas
+    Header always set X-Frame-Options SAMEORIGIN
     Header set X-XSS-Protection "1; mode=block"
     Header set X-Content-Type-Options nosniff
     
-    # PENINGKATAN KEAMANAN: Menambahkan Referrer-Policy 
-    [cite_start]Header set Referrer-Policy "strict-origin-when-cross-origin" 
+    # PENINGKATAN KEAMANAN: Menambahkan Referrer-Policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # PERBAIKAN ISU #8: Caching HTML (Refresh setiap 1 jam/3600 detik)
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "max-age=3600, public"
+    </FilesMatch>
 </IfModule>
 
 # --- 4. Kontrol Cache (Expires) ---
@@ -32,16 +37,26 @@ RewriteRule ^(.*)$ https://%1/$1 [L,R=301] [cite: 2]
     ExpiresActive On
     ExpiresDefault "access 1 week"
     
-    # Media & Font: 1 tahun
+    # PERBAIKAN ISU #4: Menambahkan Aset yang Hilang (SVG, ICO, Font Modern)
+    # Gambar & Ikon: 1 tahun
     ExpiresByType image/jpg "access 1 year"
     ExpiresByType image/jpeg "access 1 year"
     ExpiresByType image/gif "access 1 year"
     ExpiresByType image/png "access 1 year"
-    [cite_start]ExpiresByType image/webp "access 1 year" 
+    ExpiresByType image/webp "access 1 year"
+    ExpiresByType image/svg+xml "access 1 year"
+    ExpiresByType image/x-icon "access 1 year"
+
+    # Font: 1 tahun (Mencakup format modern WOFF2)
     ExpiresByType application/x-font-woff "access 1 year"
     ExpiresByType application/x-font-ttf "access 1 year"
+    ExpiresByType application/vnd.ms-fontobject "access 1 year"
+    ExpiresByType font/ttf "access 1 year"
+    ExpiresByType font/otf "access 1 year"
+    ExpiresByType font/woff "access 1 year"
+    ExpiresByType font/woff2 "access 1 year"
     
-    # CSS & JS: 1 bulan (untuk mempermudah update)
+    # CSS & JS: 1 bulan (Cukup lama tapi aman untuk update bulanan)
     ExpiresByType text/css "access 1 month"
     ExpiresByType text/javascript "access 1 month"
     ExpiresByType application/javascript "access 1 month"
@@ -49,11 +64,12 @@ RewriteRule ^(.*)$ https://%1/$1 [L,R=301] [cite: 2]
 
 # --- 5. Kompresi Gzip (Deflate) ---
 <IfModule mod_deflate.c>
+    # Mengkompresi file text agar transfer lebih cepat
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/xml
     AddOutputFilterByType DEFLATE text/css
-    # PERBAIKAN: 
-    [cite_start]Menggabungkan baris application/javascript [cite: 4]
-    [cite_start]AddOutputFilterByType DEFLATE application/javascript [cite: 4]
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
 </IfModule>

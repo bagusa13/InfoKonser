@@ -1,9 +1,10 @@
 /* ============================================================
-   STYLE V3 - FINAL CLEANED & VERIFIED (ICON PRELOADER)
-   PERBAIKAN: Mengurangi ukuran Hero Title, menyesuaikan padding card, Fix Posisi Toast di Mobile.
+   STYLE V3 - FINAL CLEANED & VERIFIED (CLOUD READY)
+   PERBAIKAN: Grid Flex, Vendor Prefix Removed, Toast Mobile Fix
    ============================================================ */
 
-/* KODE @IMPORT FONT TELAH DIHAPUS DARI SINI */
+/* FONT IMPORT (Sebaiknya di-load di HTML untuk performa, tapi jika diperlukan di sini): */
+/* @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap'); */
 
 :root {
     /* --- PALET WARNA (V2 ORIGINAL) --- */
@@ -74,7 +75,7 @@ body::before {
 .navbar {
     position: fixed; top: 0; width: 100%; z-index: 1000; padding: 1.2rem 0;
     background: rgba(2, 4, 8, 0.85);
-    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px); /* PERBAIKAN ISU #21: Hapus -webkit- */
     border-bottom: 1px solid var(--border);
 }
 .nav-content { display: flex; justify-content: space-between; align-items: center; }
@@ -150,20 +151,20 @@ body::before {
 /* --- CARD GRID --- */
 .grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    /* PERBAIKAN ISU #5: Mengubah 320px -> 280px agar lebih fleksibel di tablet */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
     gap: 2rem; 
 }
 
 .card {
     background: var(--bg-glass);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px); /* PERBAIKAN ISU #21: Hapus -webkit- */
     border: 1px solid var(--border);
     border-radius: 20px; overflow: hidden;
     transition: transform 0.4s var(--ease-out), box-shadow 0.4s;
     display: flex; flex-direction: column;
     position: relative;
-    font-family: var(--font-body); /* Penyesuaian: Menetapkan font body di sini */
-    /* Tambahan agar animasi load more halus */
+    font-family: var(--font-body);
     animation: fadeInUp 0.6s ease backwards;
 }
 @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
@@ -228,7 +229,6 @@ body::before {
 }
 .popup-overlay.active { opacity: 1; visibility: visible; }
 
-/* --- PERBAIKAN POPUP (FIXED) --- */
 .popup-card {
     background: #111; 
     width: 90%;            
@@ -296,20 +296,14 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     .bottom-nav { display: flex !important; } 
     .hero { padding-top: 120px; }
     
-    /* PERBAIKAN: Mengurangi ukuran Hero Title */
     .hero h1 { font-size: 2.1rem; } 
     
-    /* PERBAIKAN: Mengurangi gap dan padding card agar tidak terlalu mentok */
     .grid { 
         grid-template-columns: 1fr; 
-        gap: 1rem; /* Mengurangi gap antar kartu */
+        gap: 1rem;
     }
-    .card-content {
-        padding: 1rem; /* Mengurangi padding di dalam konten kartu */
-    }
-    .card h3 {
-        font-size: 1.3rem; /* Mengurangi ukuran judul di dalam kartu */
-    }
+    .card-content { padding: 1rem; }
+    .card h3 { font-size: 1.3rem; }
 
     .card-img-wrap { height: 200px; }
     .about-grid { grid-template-columns: 1fr; gap: 2rem; }
@@ -319,7 +313,7 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     /* Fix posisi tombol back to top di HP */
     #backToTop { bottom: 100px; right: 20px; }
 
-    /* PERBAIKAN: Posisi Toast dinaikkan agar tidak tertutup bottom-nav */
+    /* PERBAIKAN ISU #6: Posisi Toast dinaikkan agar tidak tertutup bottom-nav */
     .toast-container {
         bottom: 100px; 
     }
@@ -361,10 +355,6 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     pointer-events: none;
 }
 
-/* KODE LAMA GLITCH/HOLOGRAM TEXT & KEYFRAMES GLITCH DIHAPUS */
-.loader-brand { /* Dihapus dari HTML & CSS */ }
-
-
 /* --- STYLING PULSING AUDIO WAVE --- */
 .audio-wave-container {
     display: flex;
@@ -397,7 +387,6 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     50% { transform: scaleY(1.5); opacity: 1; box-shadow: 0 0 10px var(--primary-glow); }
     100% { transform: scaleY(0.1); opacity: 0.5; }
 }
-
 
 /* 2. BACK TO TOP BUTTON */
 #backToTop {

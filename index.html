@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
     <title>InfoKonser.web.id - Jadwal Konser Musik Terlengkap</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
@@ -60,24 +60,25 @@
             <h2 style="font-family:var(--font-head); font-size:2.5rem; color:white;">Explor <span class="serif-italic">Konser</span></h2>
             <div class="search-wrapper">
                 <i class="fas fa-search search-icon"></i>
+                <label for="searchInput" style="display:none;">Cari Konser</label>
                 <input type="text" id="searchInput" class="search-input" placeholder="Cari nama Artis atau nama Kota">
             </div>
         </div>
 
         <div class="filter-container">
             <div class="filter-scroll">
-                <button class="filter-btn active" data-filter="all">ALL</button>
-                <button class="filter-btn" data-filter="FAVORITE" style="color:#ef4444;"><i class="fas fa-heart"></i> Favorit</button>
-                <button class="filter-btn" data-filter="ROCK">Rock</button>
-                <button class="filter-btn" data-filter="POP">Pop</option>
-                <button class="filter-btn" data-filter="JAZZ">Jazz</button>
-                <button class="filter-btn" data-filter="INDIE">Indie</button>
-                <button class="filter-btn" data-filter="METAL">Metal</button>
-                <button class="filter-btn" data-filter="PUNK">Punk</button>
-                <button class="filter-btn" data-filter="HIPHOP">HipHop</button>
-                <button class="filter-btn" data-filter="REGGAE">Reggae</button>
-                <button class="filter-btn" data-filter="DJ">DJ</button>
-                <button class="filter-btn" data-filter="HIPDUT">Hipdut</button>
+                <button class="filter-btn active" data-filter="all" aria-label="Tampilkan Semua Konser">ALL</button>
+                <button class="filter-btn" data-filter="FAVORITE" style="color:#ef4444;" aria-label="Tampilkan Konser Favorit"><i class="fas fa-heart"></i> Favorit</button>
+                <button class="filter-btn" data-filter="ROCK" aria-label="Filter Genre Rock">Rock</button>
+                <button class="filter-btn" data-filter="POP" aria-label="Filter Genre Pop">Pop</button>
+                <button class="filter-btn" data-filter="JAZZ" aria-label="Filter Genre Jazz">Jazz</button>
+                <button class="filter-btn" data-filter="INDIE" aria-label="Filter Genre Indie">Indie</button>
+                <button class="filter-btn" data-filter="METAL" aria-label="Filter Genre Metal">Metal</button>
+                <button class="filter-btn" data-filter="PUNK" aria-label="Filter Genre Punk">Punk</button>
+                <button class="filter-btn" data-filter="HIPHOP" aria-label="Filter Genre HipHop">HipHop</button>
+                <button class="filter-btn" data-filter="REGGAE" aria-label="Filter Genre Reggae">Reggae</button>
+                <button class="filter-btn" data-filter="DJ" aria-label="Filter Genre DJ">DJ</button>
+                <button class="filter-btn" data-filter="HIPDUT" aria-label="Filter Genre Hipdut">Hipdut</button>
             </div>
         </div>
 
@@ -111,18 +112,18 @@
         </a>
     </nav>
 
-    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Kembali ke atas">
         <i class="fas fa-arrow-up"></i>
     </button>
 
     <div id="eventPopup" class="popup-overlay hidden">
-        <div class="popup-card">
-            <button id="closePopupBtn" class="close-btn"><i class="fas fa-times"></i></button>
+        <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+            <button id="closePopupBtn" class="close-btn" aria-label="Tutup Detail Event"><i class="fas fa-times"></i></button>
             <div id="popupContent"></div>
         </div>
     </div>
 
-    <div id="toast" class="toast-container">
+    <div id="toast" class="toast-container" role="alert" aria-live="assertive">
         <i class="fas fa-check-circle toast-icon"></i>
         <span id="toastMsg" class="toast-msg">Notifikasi</span>
     </div>

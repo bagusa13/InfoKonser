@@ -1,0 +1,23 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "max-age=3600, public" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(css|js|woff|woff2|ttf|otf|svg|ico|png|jpe?g|gif|webp)",
+      "headers": [
+        { "key": "Cache-Control", "value": "max-age=2592000, public" } 
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/tentang", "destination": "/tentang.html" }
+  ]
+}
