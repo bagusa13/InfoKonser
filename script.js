@@ -465,7 +465,7 @@ function setupAdminForm() {
             const file = e.target.files[0];
             if(!file) return;
             
-            const CLOUDINARY_CLOUD_NAME = 'dyfc0l8y5'; // Cloud Name Anda
+            const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; // Cloud Name Anda
             const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; // Preset yang sudah Anda buat
             const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
             
