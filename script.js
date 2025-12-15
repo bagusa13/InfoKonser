@@ -1,7 +1,6 @@
 /* ============================================================
    INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX V3)
-   SOLUSI FINAL: Menggunakan setAttribute untuk menulis nilai input.
-   Ini adalah cara paling stabil untuk menghindari blokir keamanan di Vercel.
+   SOLUSI FINAL: Perbaikan Anti-Security Block dan Inisialisasi Auth.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -71,16 +70,13 @@ document.addEventListener('change', async (e) => {
             if(res.secure_url) {
                 const link = res.secure_url;
                 
-                // SIMPAN LINK KE INPUT TERSEMBUNYI (Perbaikan Penargetan Diperkuat)
+                // SIMPAN LINK KE INPUT (SOLUSI ANTI-BLOCK FINAL)
                 const hiddenInput = document.getElementById('concertImage');
                 if (hiddenInput) {
-                    // --- SOLUSI ANTI-BLOCK FINAL ---
-                    hiddenInput.setAttribute('value', link); // Metode setAttribute untuk menghindari blokir
+                    hiddenInput.setAttribute('value', link); // SetAttribute wajib untuk Live Web
                     hiddenInput.value = link; 
-                    // --- END SOLUSI ANTI-BLOCK FINAL ---
                 } else {
-                    alert("FATAL ERROR: Input tersembunyi 'concertImage' tidak ditemukan!");
-                    console.error("Input ID 'concertImage' tidak ditemukan di DOM.");
+                    alert("FATAL ERROR: Input 'concertImage' tidak ditemukan!");
                     return;
                 }
                 
@@ -188,6 +184,13 @@ function initAdminPage() {
     const loginView = document.getElementById('loginView');
     const adminPanel = document.getElementById('adminPanel');
 
+    // Pastikan adminPanel dan loginView ada di DOM
+    if (!adminPanel || !loginView) {
+        console.error("Elemen Admin Panel atau Login View tidak ditemukan di DOM.");
+        return;
+    }
+    
+    // Logika menampilkan atau menyembunyikan panel
     onAuthStateChanged(auth, (user) => {
         if (user) {
             loginView.classList.add('hidden');
