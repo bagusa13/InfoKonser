@@ -1,8 +1,12 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX)
-   SOLUSI FINAL: Menggunakan Event Delegation.
-   Perintah upload ditempel ke Dokumen, bukan ke elemen tombol.
-   Ini menjamin tombol Upload TIDAK AKAN PERNAH MATI/EROR.
+   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX V2)
+   SOLUSI FINAL: Menggunakan Event Delegation yang sudah disempurnakan.
+   Ini adalah versi yang paling stabil dan anti-gagal untuk Admin Panel.
+   
+   Perbaikan Kunci:
+   - Menghapus fungsi setupAdminForm() yang konflik (diganti global listeners).
+   - Penargetan elemen 'concertImage' diperkuat.
+   - onsubmit="return false;" ditambahkan ke admin.html.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -49,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 1. LISTENER UNTUK UPLOAD GAMBAR (CLOUDINARY)
 document.addEventListener('change', async (e) => {
+    // Cek apakah yang diklik adalah tombol imageInput?
     if (e.target && e.target.id === 'imageInput') {
         const file = e.target.files[0];
         if(!file) return;
@@ -72,15 +77,21 @@ document.addEventListener('change', async (e) => {
             if(res.secure_url) {
                 const link = res.secure_url;
                 
-                // SIMPAN LINK KE INPUT TERSEMBUNYI
-                document.getElementById('concertImage').value = link;
+                // SIMPAN LINK KE INPUT TERSEMBUNYI (Perbaikan Penargetan Diperkuat)
+                const hiddenInput = document.getElementById('concertImage');
+                if (hiddenInput) {
+                    hiddenInput.value = link;
+                } else {
+                    alert("FATAL ERROR: Input tersembunyi 'concertImage' tidak ditemukan!");
+                    console.error("Input ID 'concertImage' tidak ditemukan di DOM.");
+                    return;
+                }
                 
                 // TAMPILKAN PREVIEW
                 document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
                 statusTxt.innerText = "✅ GAMBAR DITERIMA! Silakan Klik Tombol UPLOAD di Bawah.";
                 statusTxt.style.color = "#00f2ea"; 
                 
-                // MUNCULKAN ALERT SUKSES
                 alert("SUKSES: Gambar Poster Berhasil Diupload!\nSekarang Anda bisa menekan tombol UPLOAD di bawah.");
                 
             } else { 
@@ -98,7 +109,8 @@ document.addEventListener('change', async (e) => {
 // 2. LISTENER UNTUK SUBMIT FORM ADMIN
 document.addEventListener('submit', async (e) => {
     if (e.target && e.target.id === 'concertForm') {
-        e.preventDefault();
+        // e.preventDefault() sudah ada di onsubmit="return false;" di HTML, tapi ditambahkan lagi untuk jaga-jaga
+        e.preventDefault(); 
         
         const editId = document.getElementById('editId').value;
         const img = document.getElementById('concertImage').value || document.getElementById('oldImage').value;
