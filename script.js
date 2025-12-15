@@ -184,13 +184,11 @@ function initAdminPage() {
     const loginView = document.getElementById('loginView');
     const adminPanel = document.getElementById('adminPanel');
 
-    // Pastikan adminPanel dan loginView ada di DOM
     if (!adminPanel || !loginView) {
         console.error("Elemen Admin Panel atau Login View tidak ditemukan di DOM.");
         return;
     }
     
-    // Logika menampilkan atau menyembunyikan panel
     onAuthStateChanged(auth, (user) => {
         if (user) {
             loginView.classList.add('hidden');
