@@ -1,6 +1,6 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX V3)
-   SOLUSI FINAL: Perbaikan Anti-Security Block dan Inisialisasi Auth.
+   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX V4 - LINTAS BROWSER)
+   SOLUSI FINAL: Menggunakan setAttribute & defaultValue untuk kepastian di Chrome/Safari.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -70,16 +70,21 @@ document.addEventListener('change', async (e) => {
             if(res.secure_url) {
                 const link = res.secure_url;
                 
-                // SIMPAN LINK KE INPUT (SOLUSI ANTI-BLOCK FINAL)
+                // --- SOLUSI ANTI-SAFARI/CHROME FINAL ---
                 const hiddenInput = document.getElementById('concertImage');
                 if (hiddenInput) {
-                    hiddenInput.setAttribute('value', link); // SetAttribute wajib untuk Live Web
+                    // MENGISI SEMUA PROPERTI UNTUK KEAMANAN DOM LINTAS-BROWSER
+                    hiddenInput.setAttribute('value', link); 
                     hiddenInput.value = link; 
+                    hiddenInput.defaultValue = link; 
+                    console.log("SUCCESS: Link gambar berhasil disimpan di input 'concertImage'. URL:", link);
                 } else {
                     alert("FATAL ERROR: Input 'concertImage' tidak ditemukan!");
+                    console.error("Input ID 'concertImage' tidak ditemukan di DOM.");
                     return;
                 }
-                
+                // --- END SOLUSI FINAL ---
+
                 // TAMPILKAN PREVIEW
                 document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
                 statusTxt.innerText = "✅ GAMBAR DITERIMA! Silakan Klik Tombol UPLOAD di Bawah.";

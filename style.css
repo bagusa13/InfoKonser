@@ -59,7 +59,12 @@ body::before {
     pointer-events: none;
 }
 
-.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+/* --- PERBAIKAN PADDING MOBILE CONTAINER --- */
+.container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 0 1.5rem; /* Padding default 1.5rem */
+}
 .hidden { display: none !important; }
 
 /* UTILS TEXT */
@@ -75,7 +80,7 @@ body::before {
 .navbar {
     position: fixed; top: 0; width: 100%; z-index: 1000; padding: 1.2rem 0;
     background: rgba(2, 4, 8, 0.85);
-    backdrop-filter: blur(15px); /* PERBAIKAN ISU #21: Hapus -webkit- */
+    backdrop-filter: blur(15px); 
     border-bottom: 1px solid var(--border);
 }
 .nav-content { display: flex; justify-content: space-between; align-items: center; }
@@ -121,7 +126,11 @@ body::before {
 }
 
 /* --- CATALOG AREA --- */
-.section-catalog { padding: 2rem 0 6rem; }
+.section-catalog { 
+    padding: 2rem 0 6rem; 
+    /* Hapus padding samping di sini, karena sudah ada di .container */
+    /* HANYA MENGATUR PADDING TOP DAN BOTTOM */
+}
 .catalog-header { margin-bottom: 2rem; }
 
 .search-wrapper { position: relative; margin-top: 1.5rem; }
@@ -151,14 +160,13 @@ body::before {
 /* --- CARD GRID --- */
 .grid { 
     display: grid; 
-    /* PERBAIKAN ISU #5: Mengubah 320px -> 280px agar lebih fleksibel di tablet */
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
     gap: 2rem; 
 }
 
 .card {
     background: var(--bg-glass);
-    backdrop-filter: blur(10px); /* PERBAIKAN ISU #21: Hapus -webkit- */
+    backdrop-filter: blur(10px); 
     border: 1px solid var(--border);
     border-radius: 20px; overflow: hidden;
     transition: transform 0.4s var(--ease-out), box-shadow 0.4s;
@@ -298,10 +306,17 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     
     .hero h1 { font-size: 2.1rem; } 
     
+    /* PERBAIKAN UTAMA: Mengurangi padding container di mobile */
+    .container {
+        padding: 0 1rem; /* Mengurangi padding dari 1.5rem ke 1rem */
+    }
+
     .grid { 
+        /* Pastikan grid tidak memiliki margin negatif atau padding aneh */
         grid-template-columns: 1fr; 
         gap: 1rem;
     }
+    
     .card-content { padding: 1rem; }
     .card h3 { font-size: 1.3rem; }
 
