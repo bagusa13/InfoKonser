@@ -1,7 +1,7 @@
 /* ============================================================
    INFOKONSER.ID - ENGINE V3 (FINAL FIXED & CLOUD READY)
    FIXED ISSUES: 
-   1. URL Google Maps (HTTPS & Format Benar)
+   1. URL Google Maps (HTTPS & Format Benar) <--- BARU DIPERBAIKI
    2. Format Mata Uang USD (Intl.NumberFormat)
    3. Logika Tanggal (Parsing Lokal - Mencegah "Selesai" Prematur)
    4. Validasi Admin Form (Hanya Wajib Upload saat Add Event)
@@ -239,10 +239,9 @@ function showPopup(id) {
 
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     
-    // Isu #1 (FIX MAPS URL): Menggunakan HTTPS dan format query parameter yang benar (?q=)
-    // Format sebelumnya menyebabkan peta blank/error di console.
+    // PERBAIKAN FINAL MAPS URL: Menggunakan HTTPS dan Sintaks Template String yang Benar
     const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    const mapLinkUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+    const mapLinkUrl = `https://maps.google.com/maps?q=${mapQuery}`;
 
     let dateDetail = formatDateIndo(new Date(c.rawDate + 'T00:00:00'));
     
@@ -633,3 +632,4 @@ window.editEvent = async (id) => {
         document.getElementById('adminPanel').scrollIntoView({behavior:'smooth'});
     }
 };
+}
