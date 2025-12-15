@@ -1,6 +1,8 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (FINAL FIXED - OPTIMIZED POPUP)
+   INFOKONSER.ID - ENGINE V3 (FINAL FIXED - CLOUDINARY STORAGE)
    Features: Limit 12, Map Embed (Small), Admin Stats, & Smooth UI
+   Perubahan: ImgBB diganti Cloudinary & URL Google Maps diperbaiki, Preloader dipercepat dan fix bug HP.
+   Notifikasi: Dinamis, mencantumkan nama konser. FIX BUG TOAST MENETAP.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -194,11 +196,23 @@ function applyFilter(filter) {
     renderGrid(res);
 }
 
-// WISHLIST
+// WISHLIST (Diperbaiki: Notifikasi Dinamis)
 function toggleWishlist(id) {
     const idx = wishlist.indexOf(id);
-    if (idx === -1) { wishlist.push(id); showToast("❤️ Masuk Favorit"); } 
-    else { wishlist.splice(idx, 1); showToast("💔 Dihapus dari Favorit"); }
+    const concert = concerts.find(c => c.id === id); // AMBIL DATA KONSER
+
+    if (!concert) return; 
+
+    let msg = "";
+    if (idx === -1) {
+        wishlist.push(id);
+        // Opsi 2: Notifikasi dengan Nama Konser (Ditambahkan)
+        msg = `❤️ ${concert.name} Ditambahkan ke Favorit!`; 
+    } else {
+        wishlist.splice(idx, 1);
+        // Opsi 2: Notifikasi dengan Nama Konser (Dihapus)
+        msg = `💔 ${concert.name} Dihapus dari Favorit.`; 
+    }
     
     localStorage.setItem('infokonser_wishlist', JSON.stringify(wishlist));
     
@@ -207,6 +221,9 @@ function toggleWishlist(id) {
         btn.classList.toggle('active');
         btn.innerHTML = wishlist.includes(id) ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
     }
+
+    // Panggil showToast dengan pesan dinamis
+    showToast(msg);
     
     const activeFilter = document.querySelector('.filter-btn.active');
     if(activeFilter && activeFilter.dataset.filter === 'FAVORITE') {
@@ -225,7 +242,7 @@ function showPopup(id) {
     popup.classList.remove('hidden');
     setTimeout(() => popup.classList.add('active'), 10);
 
-    // GENERATE GOOGLE MAPS EMBED URL
+    // GENERATE GOOGLE MAPS EMBED URL (URL MAPS DIPERBAIKI)
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 
@@ -255,7 +272,7 @@ function showPopup(id) {
                 src="${mapEmbedUrl}"
                 style="filter: invert(90%) hue-rotate(180deg);">
             </iframe>
-            <a href="https://www.google.com/maps/search/?api=1&query=${mapQuery}" target="_blank" class="map-link-btn">
+            <a href="https://maps.google.com/maps?q=${mapQuery}" target="_blank" class="map-link-btn">
                 <i class="fas fa-external-link-alt"></i> Buka di Google Maps App
             </a>
         </div>
@@ -287,13 +304,21 @@ function setupPopupLogic() {
 
 // --- V3 ADDONS ---
 function setupAddons() {
-    // 1. Preloader Smooth Fade Out
+    // 1. Preloader Smooth Fade Out (LOGIC DIPERBAIKI UNTUK FIX BUG HP)
     window.addEventListener('load', () => {
         const preloader = document.getElementById('preloader');
         if(preloader) {
+            // [1] PANGGIL FADE OUT CSS LEBIH CEPAT (300ms)
             setTimeout(() => {
                 preloader.classList.add('hide'); 
-            }, 800); 
+                
+                // [2] HAPUS ELEMEN DARI DOM SETELAH TRANSISI CSS SELESAI (0.8s)
+                // Ini mencegah bug di HP di mana preloader masih memblokir interaksi sentuh/klik.
+                setTimeout(() => {
+                    preloader.remove(); // Hapus dari DOM
+                }, 800); 
+
+            }, 300); 
         }
     });
 
@@ -324,12 +349,36 @@ function formatDateIndo(date) {
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+// showToast (Perbaikan Bug Toast Menetap)
 function showToast(msg) {
     const toast = document.getElementById('toast');
     const txt = document.getElementById('toastMsg');
+    
+    // Reset status show dan opacity untuk memastikan animasi berulang
+    toast.classList.remove('show');
+    toast.style.opacity = '0'; 
+
     txt.innerText = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    
+    // [1] Pemicu Tampil
+    setTimeout(() => {
+        toast.classList.add('show');
+        toast.style.opacity = '1';
+    }, 10); // Delay kecil sebelum tampil agar transisi CSS bekerja
+
+    // [2] Pemicu Hilang (3 detik)
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.style.opacity = '0';
+    }, 3000);
+
+    // [3] Keamanan Jangka Panjang (Hapus kelas setelah 3.5 detik)
+    // Memastikan toast benar-benar dibersihkan setelah proses fade out selesai.
+    setTimeout(() => {
+        if (!toast.classList.contains('show')) {
+             toast.style.opacity = '0';
+        }
+    }, 3500); 
 }
 
 /* ============================================================
@@ -384,27 +433,42 @@ function setupAdminForm() {
         });
     }
 
-    // Upload Gambar ke ImgBB
+    // Upload Gambar ke Cloudinary (MENGGANTIKAN IMGBB)
     const imgInput = document.getElementById('imageInput');
     if(imgInput) {
         imgInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if(!file) return;
-            document.getElementById('uploadStatus').innerText = "⏳Sedang Mengupload...";
+            
+            // --- KONFIGURASI CLOUDINARY BARU ---
+            const CLOUDINARY_CLOUD_NAME = 'dyfc0l8y5'; 
+            const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
+            const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+            
+            document.getElementById('uploadStatus').innerText = "⏳Sedang Mengupload ke Cloudinary...";
             
             const formData = new FormData();
-            formData.append("image", file);
+            formData.append("file", file); // Cloudinary menggunakan key 'file'
+            formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); 
             
             try {
-                const req = await fetch(`https://api.imgbb.com/1/upload?key=9e0e15208bce06ac4de7373c4a2ef82c`, { method:'POST', body:formData });
+                // PANGGILAN API CLOUDINARY
+                const req = await fetch(CLOUDINARY_URL, { method:'POST', body:formData });
                 const res = await req.json();
-                if(res.success) {
-                    const link = res.data.display_url;
+                
+                // AMBIL URL DARI RESPON
+                if(res.secure_url) {
+                    const link = res.secure_url;
                     document.getElementById('concertImage').value = link;
                     document.getElementById('imagePreview').innerHTML = `<img src="${link}" style="width:100%; border-radius:10px;">`;
-                    document.getElementById('uploadStatus').innerText = "✅ Selamat Upload Image Berhasil";
+                    document.getElementById('uploadStatus').innerText = "✅ Selamat Upload Image Berhasil di Cloudinary";
+                } else { 
+                    document.getElementById('uploadStatus').innerText = "❌ Gagal Upload ke Cloudinary"; 
                 }
-            } catch(err) { document.getElementById('uploadStatus').innerText = "❌ Gagal Upload"; }
+            } catch(err) { 
+                document.getElementById('uploadStatus').innerText = "❌ Gagal Upload (Cek koneksi atau konfigurasi Cloudinary)"; 
+                console.error("Cloudinary Upload Error:", err);
+            }
         });
     }
 

@@ -1,10 +1,9 @@
 /* ============================================================
-   STYLE V3 - FINAL FIXED (POPUP SIZE OPTIMIZED)
-   Base: Cinematic Glass V2 + V3 Addons
+   STYLE V3 - FINAL CLEANED & VERIFIED (ICON PRELOADER)
+   PERBAIKAN: Mengurangi ukuran Hero Title, menyesuaikan padding card, Fix Posisi Toast di Mobile.
    ============================================================ */
 
-/* Import Font Premium */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+/* KODE @IMPORT FONT TELAH DIHAPUS DARI SINI */
 
 :root {
     /* --- PALET WARNA (V2 ORIGINAL) --- */
@@ -163,6 +162,7 @@ body::before {
     transition: transform 0.4s var(--ease-out), box-shadow 0.4s;
     display: flex; flex-direction: column;
     position: relative;
+    font-family: var(--font-body); /* Penyesuaian: Menetapkan font body di sini */
     /* Tambahan agar animasi load more halus */
     animation: fadeInUp 0.6s ease backwards;
 }
@@ -195,7 +195,12 @@ body::before {
 .btn-wishlist:hover { transform: scale(1.1); background: white; color: #ef4444; }
 .btn-wishlist.active { background: var(--primary); color: black; border-color: var(--primary); }
 
-.card-content { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; }
+.card-content { 
+    padding: 1.5rem; 
+    display: flex; 
+    flex-direction: column; 
+    flex-grow: 1; 
+}
 .card-genre { font-size: 0.7rem; color: var(--primary); font-weight: 700; letter-spacing: 1.5px; margin-bottom: 8px; text-transform: uppercase; }
 .card h3 { font-family: var(--font-head); font-size: 1.5rem; margin-bottom: 15px; color: white; line-height: 1.3; }
 
@@ -226,13 +231,13 @@ body::before {
 /* --- PERBAIKAN POPUP (FIXED) --- */
 .popup-card {
     background: #111; 
-    width: 90%;            /* Ubah jadi 90% agar ada jarak kiri-kanan di HP */
-    max-width: 480px;      /* Batas lebar di Desktop diperkecil dikit */
-    max-height: 80vh;      /* PENTING: Batasi tinggi maksimal 80% layar */
-    overflow-y: auto;      /* PENTING: Agar bisa di-scroll di dalam kotak */
+    width: 90%;            
+    max-width: 480px;      
+    max-height: 80vh;      
+    overflow-y: auto;      
     border-radius: 24px;
     border: 1px solid var(--border); 
-    padding: 25px;         /* Padding dikurangi sedikit biar lega */
+    padding: 25px;         
     position: relative;
     transform: scale(0.9); 
     transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -286,32 +291,26 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
 
 /* --- RESPONSIVE MEDIA QUERIES --- */
 @media (max-width: 768px) {
-    body { padding-bottom: 10px; } /* Memberi ruang agar konten tidak tertutup menu */
-    
-    .nav-links { display: none !important; } /* Sembunyikan menu atas */
-    
-    /* PAKSA MUNCULKAN MENU BAWAH */
-    .bottom-nav { 
-        display: flex !important; 
-        opacity: 1 !important;
-        visibility: visible !important;
-        z-index: 99999 !important; /* Paling depan */
-    }
-
-    /* Penyesuaian lain */
-    .hero { padding-top: 120px; }
-    .hero h1 { font-size: 2.5rem; }
-    .grid { grid-template-columns: 1fr; gap: 1.5rem; }
-    .popup-card { width: 95%; max-height: 85vh; overflow-y: auto; }
-}
-
-@media (max-width: 768px) {
     body { padding-bottom: 90px; }
     .nav-links { display: none; }
-    .bottom-nav { display: flex; }
+    .bottom-nav { display: flex !important; } 
     .hero { padding-top: 120px; }
-    .hero h1 { font-size: 2.5rem; }
-    .grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    
+    /* PERBAIKAN: Mengurangi ukuran Hero Title */
+    .hero h1 { font-size: 2.1rem; } 
+    
+    /* PERBAIKAN: Mengurangi gap dan padding card agar tidak terlalu mentok */
+    .grid { 
+        grid-template-columns: 1fr; 
+        gap: 1rem; /* Mengurangi gap antar kartu */
+    }
+    .card-content {
+        padding: 1rem; /* Mengurangi padding di dalam konten kartu */
+    }
+    .card h3 {
+        font-size: 1.3rem; /* Mengurangi ukuran judul di dalam kartu */
+    }
+
     .card-img-wrap { height: 200px; }
     .about-grid { grid-template-columns: 1fr; gap: 2rem; }
     .popup-card { width: 95%; padding: 20px; max-height: 85vh; overflow-y: auto; }
@@ -319,7 +318,13 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     
     /* Fix posisi tombol back to top di HP */
     #backToTop { bottom: 100px; right: 20px; }
+
+    /* PERBAIKAN: Posisi Toast dinaikkan agar tidak tertutup bottom-nav */
+    .toast-container {
+        bottom: 100px; 
+    }
 }
+
 
 /* --- BOTTOM NAV (Mobile Only) --- */
 .bottom-nav {
@@ -340,7 +345,6 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
 
 /* =========================================
    V3 ADD-ONS: NEW FEATURES STYLING
-   (Ditambahkan di bawah agar aman)
    ========================================= */
 
 /* 1. CINEMATIC PRELOADER (SMOOTH TRANSITION) */
@@ -349,23 +353,51 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     background: #020408; z-index: 99999;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    /* Transisi Opacity untuk efek Smooth Fade Out */
-    transition: opacity 0.8s ease-out, visibility 0.8s;
+    transition: opacity 0.8s ease-out, visibility 0.8s; 
 }
-#preloader.hide { opacity: 0; visibility: hidden; }
+#preloader.hide { 
+    opacity: 0; 
+    visibility: hidden; 
+    pointer-events: none;
+}
 
-.loader-brand {
-    font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700;
-    color: white; letter-spacing: 2px;
-    animation: pulseGlow 2s infinite alternate;
+/* KODE LAMA GLITCH/HOLOGRAM TEXT & KEYFRAMES GLITCH DIHAPUS */
+.loader-brand { /* Dihapus dari HTML & CSS */ }
+
+
+/* --- STYLING PULSING AUDIO WAVE --- */
+.audio-wave-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    height: 40px; 
+    margin-top: 25px;
 }
-.loader-line {
-    width: 0%; height: 2px; background: #00f2ea; margin-top: 15px;
-    border-radius: 2px;
-    animation: loadLine 1.5s ease-in-out forwards;
+
+.audio-bar {
+    width: 8px; 
+    height: 4px; 
+    background-color: var(--primary);
+    margin: 0 2px;
+    border-radius: 4px;
+    transform: scaleY(1);
+    animation: wave 1.2s ease-in-out infinite alternate;
 }
-@keyframes pulseGlow { 0% { opacity: 0.5; } 100% { opacity: 1; text-shadow: 0 0 20px rgba(0,242,234,0.6); } }
-@keyframes loadLine { 0% { width: 0%; } 100% { width: 150px; } }
+
+/* Delay Animasi untuk Efek Gelombang */
+.bar-1 { animation-delay: 0.1s; }
+.bar-2 { animation-delay: 0.2s; }
+.bar-3 { animation-delay: 0.3s; }
+.bar-4 { animation-delay: 0.4s; }
+.bar-5 { animation-delay: 0.5s; }
+
+@keyframes wave {
+    0% { transform: scaleY(0.1); opacity: 0.5; }
+    50% { transform: scaleY(1.5); opacity: 1; box-shadow: 0 0 10px var(--primary-glow); }
+    100% { transform: scaleY(0.1); opacity: 0.5; }
+}
+
 
 /* 2. BACK TO TOP BUTTON */
 #backToTop {
@@ -391,4 +423,3 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     transition: 0.3s;
 }
 .map-link-btn:hover { background: #333; color: white; }
-

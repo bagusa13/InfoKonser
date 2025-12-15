@@ -7,15 +7,24 @@
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
     
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
     <div id="preloader">
-        <div class="loader-brand">INFOKONSER<span style="color:#00f2ea;">.WEB.ID</span></div>
-        <div class="loader-line"></div>
+        <i class="fas fa-compact-disc fa-spin" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px; opacity: 0.8; animation-duration: 3s;"></i>
+        <div class="audio-wave-container">
+            <div class="audio-bar bar-1"></div>
+            <div class="audio-bar bar-2"></div>
+            <div class="audio-bar bar-3"></div>
+            <div class="audio-bar bar-4"></div>
+            <div class="audio-bar bar-5"></div>
+        </div>
     </div>
 
     <nav class="navbar">
@@ -80,15 +89,5 @@
     </button>
     
     <script type="module" src="script.js"></script>
-    <nav class="bottom-nav">
-        <a href="index.html" class="nav-item">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Agenda</span>
-        </a>
-        <a href="tentang.html" class="nav-item">
-            <i class="fas fa-info-circle"></i>
-            <span>Filosofi</span>
-        </a>
-    </nav>
 </body>
 </html>

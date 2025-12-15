@@ -1,5 +1,6 @@
 # =========================================================
 # FILE .HTACCESS OPTIMAL UNTUK INFOKONSER.WEB.ID (V2)
+# PERBAIKAN: Kompresi Deflate Fix
 # =========================================================
 
 # --- 1. Dasar & URL ---
@@ -48,5 +49,6 @@ RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/xml
     AddOutputFilterByType DEFLATE text/css
+    # PERBAIKAN: Menggabungkan baris application/javascript
     AddOutputFilterByType DEFLATE application/javascript
 </IfModule>
