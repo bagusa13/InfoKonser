@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin Panel - InfoKonser</title>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>\n">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,7 +97,7 @@
             <input type="hidden" id="oldImage">
             
             <form id="concertForm" onsubmit="return false;"> 
-                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div class="form-row" style="display:flex; flex-direction:column; gap:10px;">
                     <label for="bandName" class="sr-only">Nama Artis / Event</label>
                     <input type="text" id="bandName" class="input-dark" placeholder="Nama Artis / Event" required>
                     
@@ -105,7 +105,7 @@
                     <input type="text" id="concertCity" class="input-dark" placeholder="Kota (Contoh: JAKARTA)" required>
                 </div>
                 
-                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div class="form-row" style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
                     <label for="concertVenue" class="sr-only">Nama Venue/Lokasi</label>
                     <input type="text" id="concertVenue" class="input-dark" placeholder="Nama Venue/Lokasi" required>
                     
@@ -131,12 +131,18 @@
                     </select>
                 </div>
                 
-                <div class="form-row" style="display:grid; grid-template-columns:1fr; gap:20px; margin-bottom:20px;">
+                <div class="form-row" style="margin-top:20px;">
                     <label for="concertPrice" class="sr-only">Harga</label>
-                    <input type="text" id="concertPrice" class="input-dark" placeholder="Harga (Contoh: 350.000 atau 50.50)" required>
+                    <input 
+                        type="text" 
+                        id="concertPrice" 
+                        class="input-dark" 
+                        placeholder="Harga (Contoh: 350.000, 50.50, atau FREE)"
+                        inputmode="numeric" 
+                    >
                 </div>
                 
-                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div class="form-row" style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
                     <label for="concertDateOnly" class="sr-only">Tanggal Konser</label>
                     <input type="date" id="concertDateOnly" class="input-dark" required style="color:#aaa;">
                     
@@ -151,7 +157,7 @@
                     </select>
                 </div>
 
-                <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div class="form-row" style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
                     <label for="concertDuration" class="sr-only">Durasi (Hari)</label>
                     <input type="number" id="concertDuration" class="input-dark" value="1" placeholder="Durasi (Hari)">
                     
@@ -163,7 +169,7 @@
                     </select>
                 </div>
 
-                <div style="margin-bottom:25px; border: 1px dashed var(--border); padding: 20px; border-radius: 12px; text-align:center;">
+                <div style="margin-bottom:25px; margin-top:20px; border: 1px dashed var(--border); padding: 20px; border-radius: 12px; text-align:center;">
                     <label for="imageInput" style="color:#888; font-size:0.9rem; margin-bottom:10px; display:block;">Upload Poster Event</label>
                     <input type="file" id="imageInput" class="input-dark" style="margin-bottom:5px;">
                     

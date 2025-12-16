@@ -10,13 +10,20 @@
         
         { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
         
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://infokonser-app.firebaseapp.com https://firestore.googleapis.com https://api.cloudinary.com; img-src 'self' data: https: https://res.cloudinary.com https://i.ibb.co.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; frame-src https://www.google.com https://www.google.com/maps/ https://maps.google.com/maps?q=$;" }
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https://infokonser-app.firebaseapp.com https://firestore.googleapis.com https://api.cloudinary.com; img-src 'self' data: https: https://res.cloudinary.com https://i.ibb.co.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; frame-src https://www.google.com https://maps.google.com;" }
+   
       ]
     },
     {
-      "source": "/(.*)\\.(css|js|woff|woff2|ttf|otf|svg|ico|png|jpe?g|gif|webp)",
+      "source": "/(.*)\\.(css|js)",
       "headers": [
-        { "key": "Cache-Control", "value": "max-age=2592000, public" } 
+        { "key": "Cache-Control", "value": "max-age=31536000, public, immutable" } 
+      ]
+    },
+    {
+      "source": "/(.*)\\.(woff|woff2|ttf|otf|svg|ico|png|jpe?g|gif|webp)",
+      "headers": [
+        { "key": "Cache-Control", "value": "max-age=31536000, public, immutable" } 
       ]
     }
   ],

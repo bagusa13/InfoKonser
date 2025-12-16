@@ -1,9 +1,7 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (FINAL SECURITY & OPTIMASI V4)
-   PERBAIKAN KRITIS TERAKHIR: 
-   1. FIX PRELOADER STUCK di Halaman Statis (tentang.html, 404.html)
-   2. FIX ERROR PROTOKOL MAPS (Mengubah http:// ke https://)
-   3. FIX FALLBACK ADMIN STUCK (Agar form login muncul saat testing lokal)
+   INFOKONSER.ID - ENGINE V3 (FINAL MASTER UPGRADE)
+   REVISI KRITIS: FIX BUG TOAST STUCK & Perbaikan Bahasa
+   REVISI TERAKHIR: FIX PROTOKOL MAPS STANDAR
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -32,6 +30,14 @@ let concerts = [];
 let wishlist = JSON.parse(localStorage.getItem('infokonser_wishlist')) || [];
 let currentLimit = 12; 
 let currentData = [];  
+let toastTimeoutId; // Variabel Global untuk FIX BUG STUCK
+
+// UPGRADE POINT 1: ORIGINAL META TAGS
+const originalTitle = document.title;
+const originalMetaDesc = document.querySelector('meta[name="description"]')?.content;
+const originalMetaOgTitle = document.querySelector('meta[property="og:title"]')?.content;
+const originalMetaOgDesc = document.querySelector('meta[property="og:description"]')?.content;
+const originalMetaOgImage = document.querySelector('meta[property="og:image"]')?.content;
 
 // --- MAIN ROUTER ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (document.getElementById('loginForm') || document.getElementById('adminPanel')) {
         initAdminPage();
     } else {
-        // FIX KRITIS: Panggil hidePreloader untuk halaman statis (tentang.html & 404.html)
+        // UPGRADE POINT 21: FIX KRITIS: Panggil hidePreloader untuk halaman statis (tentang.html & 404.html)
         hidePreloader();
     }
 });
@@ -64,7 +70,7 @@ document.addEventListener('change', async (e) => {
         const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
         
         const statusTxt = document.getElementById('uploadStatus');
-        statusTxt.innerText = "⏳Sedang Mengupload... Mohon Tunggu...";
+        statusTxt.innerText = "Mengunggah Poster... Mohon Tunggu."; // Revisi Bahasa
         statusTxt.style.color = "orange";
         
         const formData = new FormData();
@@ -84,7 +90,6 @@ document.addEventListener('change', async (e) => {
                     hiddenInput.setAttribute('value', link); 
                     hiddenInput.value = link; 
                     hiddenInput.defaultValue = link; 
-                    console.log("SUCCESS: Link gambar berhasil disimpan. URL:", link);
                 } else {
                     alert("FATAL ERROR: Input 'concertImage' tidak ditemukan!");
                     return;
@@ -92,17 +97,17 @@ document.addEventListener('change', async (e) => {
 
                 // TAMPILKAN PREVIEW
                 document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
-                statusTxt.innerText = "✅ GAMBAR DITERIMA! Silakan Klik Tombol UPLOAD di Bawah.";
+                statusTxt.innerText = "Poster Berhasil Diunggah. Lanjutkan UPLOAD."; // Revisi Bahasa
                 statusTxt.style.color = "#00f2ea"; 
                 
-                alert("SUKSES: Gambar Poster Berhasil Diupload!\nSekarang Anda bisa menekan tombol UPLOAD di bawah.");
+                alert("SUKSES: Poster Berhasil Diunggah!\nSekarang Anda dapat menekan tombol UPLOAD.");
                 
             } else { 
-                statusTxt.innerText = "❌ Gagal: " + (res.error?.message || "Unknown Error"); 
+                statusTxt.innerText = "Gagal: " + (res.error?.message || "Error tidak diketahui"); // Revisi Bahasa
                 alert("Cloudinary Error: " + res.error?.message);
             }
         } catch(err) { 
-            statusTxt.innerText = "❌ Error Koneksi/Jaringan"; 
+            statusTxt.innerText = "Error Koneksi/Jaringan"; // Revisi Bahasa
             console.error(err);
             alert("Error Koneksi: Cek internet Anda.");
         }
@@ -119,7 +124,7 @@ document.addEventListener('submit', async (e) => {
         
         // VALIDASI
         if(!img && !editId) { 
-            alert("STOP! Poster belum masuk.\n\nPastikan Anda sudah memilih file DAN menunggu sampai muncul pesan sukses."); 
+            alert("STOP! Poster belum tersedia.\n\nPastikan Anda sudah memilih file dan menunggu pesan sukses unggah."); // Revisi Bahasa
             return; 
         }
         
@@ -131,12 +136,18 @@ document.addEventListener('submit', async (e) => {
         // FORMAT HARGA
         const currency = document.getElementById('concertCurrency').value;
         const rawPriceInput = document.getElementById('concertPrice').value;
-        const rawPrice = (currency === 'IDR') ? cleanPrice(rawPriceInput) : rawPriceInput;
+        
+        // UPGRADE POINT 16: Hapus required, rawPrice harus fleksibel
+        let rawPrice = rawPriceInput; 
+        if (currency === 'IDR' || currency === 'USD') {
+            rawPrice = cleanPrice(rawPriceInput);
+        }
 
         let formattedPrice = 'TBA';
         if (currency === 'IDR') formattedPrice = formatRupiahDisplay(rawPrice);
         else if (currency === 'USD') formattedPrice = formatUSDDisplay(rawPrice);
-
+        else formattedPrice = rawPriceInput || 'TBA'; 
+        
         const data = {
             name: document.getElementById('bandName').value,
             city: document.getElementById('concertCity').value.toUpperCase(),
@@ -145,7 +156,6 @@ document.addEventListener('submit', async (e) => {
             rawDate: document.getElementById('concertDateOnly').value, 
             time: document.getElementById('concertTimeOnly').value,
             timezone: document.getElementById('concertTimezone').value,
-            // FIX BUG #18: Pastikan Durasi adalah Integer, default 1 jika input kosong/salah.
             duration: parseInt(document.getElementById('concertDuration').value) || 1, 
             price: formattedPrice, 
             rawPrice: rawPrice, 
@@ -158,14 +168,13 @@ document.addEventListener('submit', async (e) => {
         try {
             if(editId) {
                 await updateDoc(doc(db, "concerts", editId), data);
-                showToast("✏️ Data Diupdate!");
+                showToast("Data event berhasil diperbarui."); // Revisi Bahasa
             } else {
                 data.createdAt = new Date();
                 await addDoc(dbCollection, data);
-                showToast("🚀 Data Terbit!");
+                showToast("Event berhasil diterbitkan."); // Revisi Bahasa
             }
             
-            // FIX BUG #17: Reset form tanpa reload halaman (UX Admin Lebih Cepat)
             resetFormAdmin();
 
         } catch(err) { 
@@ -222,17 +231,18 @@ function initAdminPage() {
     let authCheckCompleted = false;
     const fallbackTimeout = setTimeout(() => {
         if (!authCheckCompleted) {
-            // Jika preloader masih ada setelah 4 detik (karena koneksi lokal diblokir)
-            loginView.classList.remove('hidden');
-            adminPanel.classList.add('hidden');
-            hidePreloader(); // Sembunyikan preloader
-            console.warn("ADMIN FALLBACK: Koneksi Firebase lokal gagal, menampilkan form login secara paksa.");
+            if (document.getElementById('preloader')) {
+                loginView.classList.remove('hidden');
+                adminPanel.classList.add('hidden');
+                hidePreloader(); 
+                console.warn("ADMIN FALLBACK: Koneksi Firebase lokal gagal, menampilkan form login secara paksa.");
+            }
         }
     }, 4000); 
     // --- FALLBACK TIMER END ---
     
     onAuthStateChanged(auth, (user) => {
-        clearTimeout(fallbackTimeout); // Batalkan timer jika Firebase merespons cepat
+        clearTimeout(fallbackTimeout); 
         authCheckCompleted = true;
 
         if (user) {
@@ -243,7 +253,7 @@ function initAdminPage() {
             loginView.classList.remove('hidden');
             adminPanel.classList.add('hidden');
         }
-        hidePreloader(); // Sembunyikan preloader setelah status otentikasi didapat
+        hidePreloader(); 
     });
 
     const loginForm = document.getElementById('loginForm');
@@ -258,7 +268,7 @@ function initAdminPage() {
             btn.disabled = true;
 
             signInWithEmailAndPassword(auth, email, pass)
-                .then(() => showToast("SELAMAT DATANG!"))
+                .then(() => showToast("Selamat datang di Dashboard Admin.")) // Revisi Bahasa
                 .catch((err) => alert("Login Gagal: " + err.message))
                 .finally(() => { btn.innerText = "LOGIN"; btn.disabled = false; });
         });
@@ -274,6 +284,7 @@ function initAdminPage() {
 
 function loadAdminData() {
     const tbody = document.getElementById('adminConcerts');
+    
     const q = query(dbCollection, orderBy("rawDate", "desc"));
     
     onSnapshot(q, (snap) => {
@@ -313,7 +324,7 @@ function loadAdminData() {
 window.delEvent = async (id) => {
     if(confirm("Yakin menghapus permanen?")) {
         await deleteDoc(doc(db, "concerts", id));
-        showToast("🗑️ Data Berhasil Dihapus");
+        showToast("Data berhasil dihapus."); // Revisi Bahasa
     }
 };
 
@@ -338,7 +349,7 @@ window.editEvent = async (id) => {
         document.getElementById('concertDetail').value = d.desc;
         document.getElementById('concertDuration').value = d.duration || '1';
         
-        // FIX BUG #6 (CACHE BUSTING): Tambahkan timestamp agar browser TIDAK menggunakan cache gambar lama.
+        // UPGRADE POINT 23: FIX BUG #6 (CACHE BUSTING): Tambahkan timestamp agar browser TIDAK menggunakan cache gambar lama.
         const bustUrl = `${d.image}?v=${new Date().getTime()}`;
         
         // Gunakan bustUrl untuk memastikan preview gambar selalu terbaru
@@ -368,7 +379,11 @@ function initPublicPage() {
     const container = document.getElementById('concertContainer');
     const q = query(dbCollection, orderBy("rawDate", "asc")); 
     
-    container.innerHTML = '<div style="color:#666; text-align:center; grid-column:1/-1; padding:50px;">Memuat data...</div>';
+    // UPGRADE POINT 11: ICON ANIMASI LOADING
+    container.innerHTML = `<div style="color:#666; text-align:center; grid-column:1/-1; padding:50px;">
+        <i class="fas fa-compact-disc fa-spin" style="font-size: 2rem; color: var(--primary); opacity: 0.8; animation-duration: 3s; margin-bottom: 10px; display: block;"></i>
+        Memuat data...
+    </div>`;
 
     setupSearch();
     setupFilters();
@@ -384,7 +399,16 @@ function initPublicPage() {
 
     container.addEventListener('click', (e) => {
         const wishBtn = e.target.closest('.btn-wishlist');
-        if (wishBtn) { e.stopPropagation(); toggleWishlist(wishBtn.dataset.id, wishBtn); return; }
+        if (wishBtn) { 
+            e.stopPropagation(); 
+            toggleWishlist(wishBtn.dataset.id, wishBtn); 
+            
+            const activeFilter = document.querySelector('.filter-btn.active');
+            if(activeFilter && activeFilter.dataset.filter === 'FAVORITE') {
+                applyFilter('FAVORITE'); 
+            }
+            return; 
+        }
 
         const detailBtn = e.target.closest('.btn-card-action');
         if (detailBtn && !detailBtn.hasAttribute('disabled')) { showPopup(detailBtn.dataset.id); }
@@ -393,7 +417,7 @@ function initPublicPage() {
     onSnapshot(q, (snapshot) => {
         concerts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         
-        // FIX PRELOADER: Hilang hanya setelah data dimuat
+        // UPGRADE POINT 21: FIX PRELOADER: Hilang hanya setelah data dimuat
         hidePreloader();
         
         currentData = concerts;
@@ -401,6 +425,7 @@ function initPublicPage() {
     }, (err) => {
         console.error("Load Error:", err);
         container.innerHTML = `<div style="text-align:center; padding:50px;">Gagal memuat data. Periksa koneksi internet.</div>`;
+        // UPGRADE POINT 21: Hide preloader jika terjadi error load
         hidePreloader(); 
     });
 }
@@ -416,7 +441,18 @@ function renderGrid(data, isLoadMore = false) {
     } 
     
     if (data.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:50px; grid-column:1/-1; opacity:0.5;">Belum ada agenda konser.</div>`;
+        // UPGRADE POINT 5: ZERO STATE PREMIUM
+        container.innerHTML = `
+            <div class="zero-state">
+                <div class="zero-state-icon">
+                    <i class="fas fa-compact-disc"></i>
+                </div>
+                <h3 class="zero-state-title">Panggung Sedang Sunyi...</h3>
+                <p class="zero-state-desc">
+                    Belum ada agenda konser yang sesuai dengan filter atau kota pencarian Anda. <br>Coba ganti genre atau cek lagi nanti.
+                </p>
+            </div>
+        `;
         if(loadContainer) loadContainer.style.display = 'none';
         return;
     }
@@ -461,6 +497,12 @@ function renderGrid(data, isLoadMore = false) {
             badge = `<div class="status-badge" style="background:#f59e0b; color:black; border-color:#f59e0b;">LIMITED</div>`;
         }
 
+        let dateDisplay = formatDateIndo(startDate);
+        if (c.duration && parseInt(c.duration) > 1) {
+             // Tampilkan durasi jika lebih dari 1 hari
+             dateDisplay += ` (+${parseInt(c.duration) - 1} Hari)`; 
+        }
+
         const isLoved = wishlist.includes(c.id);
         const heartIcon = isLoved ? "fa-solid fa-heart" : "fa-regular fa-heart";
         const heartActive = isLoved ? "active" : "";
@@ -485,7 +527,7 @@ function renderGrid(data, isLoadMore = false) {
                 <div class="card-genre">${c.genre || 'MUSIC'}</div>
                 <h3>${safeName.textContent}</h3> 
                 <div class="card-details">
-                    <div class="detail-row"><i class="far fa-calendar"></i> ${formatDateIndo(startDate)}</div>
+                    <div class="detail-row"><i class="far fa-calendar"></i> ${dateDisplay}</div>
                     <div class="detail-row"><i class="fas fa-map-marker-alt"></i> ${c.city}</div>
                     <div class="detail-row"><i class="fas fa-tag"></i> ${c.price || 'TBA'}</div>
                 </div>
@@ -549,10 +591,10 @@ function toggleWishlist(id, btnElement = null) {
     let msg = "";
     if (idx === -1) {
         wishlist.push(id);
-        msg = `❤️ ${concert.name} Ditambahkan ke Favorit!`; 
+        msg = `${concert.name} telah ditambahkan ke Favorit.`; // Revisi Bahasa
     } else {
         wishlist.splice(idx, 1);
-        msg = `💔 ${concert.name} Dihapus dari Favorit.`; 
+        msg = `${concert.name} telah dihapus dari Favorit.`; // Revisi Bahasa
     }
     
     localStorage.setItem('infokonser_wishlist', JSON.stringify(wishlist));
@@ -564,10 +606,25 @@ function toggleWishlist(id, btnElement = null) {
     }
 
     showToast(msg);
-    const activeFilter = document.querySelector('.filter-btn.active');
-    if(activeFilter && activeFilter.dataset.filter === 'FAVORITE') {
-        applyFilter('FAVORITE');
-    }
+}
+
+// UPGRADE POINT 1: META TAG DINAMIS
+function setMetaTags(title, desc, image) {
+    document.title = title;
+    // Cek keberadaan elemen sebelum mengubah kontennya
+    if (document.querySelector('meta[name="description"]')) document.querySelector('meta[name="description"]').content = desc;
+    if (document.querySelector('meta[property="og:title"]')) document.querySelector('meta[property="og:title"]').content = title;
+    if (document.querySelector('meta[property="og:description"]')) document.querySelector('meta[property="og:description"]').content = desc;
+    if (document.querySelector('meta[property="og:image"]')) document.querySelector('meta[property="og:image"]').content = image;
+}
+
+function resetMetaTags() {
+    // Cek keberadaan original meta tags sebelum di reset
+    if (originalTitle) document.title = originalTitle;
+    if (originalMetaDesc) document.querySelector('meta[name="description"]').content = originalMetaDesc;
+    if (originalMetaOgTitle) document.querySelector('meta[property="og:title"]').content = originalMetaOgTitle;
+    if (originalMetaOgDesc) document.querySelector('meta[property="og:description"]').content = originalMetaOgDesc;
+    if (originalMetaOgImage) document.querySelector('meta[property="og:image"]').content = originalMetaOgImage;
 }
 
 function showPopup(id) {
@@ -580,6 +637,13 @@ function showPopup(id) {
     popup.classList.remove('hidden');
     setTimeout(() => popup.classList.add('active'), 10);
 
+    // UPGRADE POINT 1: META TAG DINAMIS
+    const metaImage = c.image;
+    const metaTitle = `${c.name} Live in ${c.city} - InfoKonser`;
+    const metaDesc = `Jadwal konser ${c.name} pada ${formatDateIndo(new Date(c.rawDate))} di ${c.venue}. Tiket: ${c.price}.`;
+    
+    setMetaTags(metaTitle, metaDesc, metaImage);
+
     // Sanitasi deskripsi dan nama sebelum dimasukkan ke innerHTML
     const safeDesc = document.createElement('div');
     safeDesc.textContent = c.desc;
@@ -589,7 +653,7 @@ function showPopup(id) {
     
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     
-    // 🔥 PERBAIKAN KRITIS: Mengubah protokol http:// menjadi https:// di sini
+    // REVISI TERAKHIR: Menggunakan pola URL Google Maps standar (Fix Bug #1)
     const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
     const mapLinkUrl = `https://maps.google.com/maps?q=${mapQuery}`;
 
@@ -660,7 +724,7 @@ function showPopup(id) {
             navigator.share({ title: c.name, text: `Yuk nonton ${c.name} di ${c.city}!`, url: window.location.href });
         } else {
             navigator.clipboard.writeText(window.location.href);
-            showToast("🔗 Link berhasil disalin!");
+            showToast("Tautan berhasil disalin."); // Revisi Bahasa
         }
     });
 }
@@ -670,6 +734,9 @@ function setupPopupLogic() {
     document.getElementById('closePopupBtn').addEventListener('click', () => {
         popup.classList.remove('active');
         setTimeout(() => popup.classList.add('hidden'), 300);
+        
+        // UPGRADE POINT 1: META TAG DINAMIS (RESET)
+        resetMetaTags();
     });
 }
 
@@ -708,27 +775,51 @@ function formatDateIndo(date) {
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+// FIX BUG: Toast Stuck
 function showToast(msg) {
     const toast = document.getElementById('toast');
     const txt = document.getElementById('toastMsg');
     
+    // 1. Hapus timer lama jika ada (FIX BUG STUCK)
+    clearTimeout(toastTimeoutId);
+    
+    // 2. Set opacity ke 0 dan hapus class 'show' (Reset posisi)
     toast.classList.remove('show');
     toast.style.opacity = '0'; 
 
+    // 3. Set pesan baru
     txt.innerText = msg;
     
-    setTimeout(() => { toast.classList.add('show'); toast.style.opacity = '1'; }, 10); 
-    setTimeout(() => { toast.classList.remove('show'); toast.style.opacity = '0'; }, 3000);
-    setTimeout(() => { if (!toast.classList.contains('show')) { toast.style.opacity = '0'; } }, 3500); 
+    // 4. Tampilkan toast
+    setTimeout(() => { 
+        toast.classList.add('show'); 
+        toast.style.opacity = '1'; 
+    }, 10); 
+    
+    // 5. Atur timer baru untuk menghilang setelah 3 detik
+    toastTimeoutId = setTimeout(() => { 
+        toast.classList.remove('show'); 
+        toast.style.opacity = '0'; 
+    }, 3000); 
+    
+    // 6. Optional: Set opacity ke 0 setelah transisi (jaga-jaga)
+    setTimeout(() => { 
+        if (!toast.classList.contains('show')) { 
+            toast.style.opacity = '0'; 
+        } 
+    }, 3500); 
 }
+
 
 // UTILS HARGA
 function cleanPrice(value) {
-    return value.replace(/[^0-9]/g, '');
+    // Hapus semua karakter kecuali angka dan titik (untuk USD)
+    // Karena kita sudah menangani IDR dan USD di atas, cleanPrice ini hanya menghapus non-numeric untuk konversi
+    return value.replace(/[^0-9.]/g, ''); 
 }
 
 function formatRupiahDisplay(number) {
-    if (!number) return 'TBA';
+    if (!number || number.toString().replace(/[^0-9]/g, '') === '') return 'TBA';
     const cleanNumber = number.toString().replace(/[^0-9]/g, ''); 
     if (!cleanNumber) return 'TBA';
     
@@ -738,7 +829,7 @@ function formatRupiahDisplay(number) {
 }
 
 function formatUSDDisplay(number) {
-    if (!number) return 'TBA';
+    if (!number || number.toString().replace(/[^0-9.]/g, '') === '') return 'TBA';
     const cleanNumber = number.toString().replace(/[^0-9.]/g, ''); 
     if (!cleanNumber) return 'TBA';
 
@@ -752,13 +843,16 @@ function formatPriceInput(inputElement) {
     let value = inputElement.value;
     
     if (currency === 'IDR') {
-        let clean = cleanPrice(value);
+        // Izinkan angka dan titik
+        let clean = value.replace(/[^0-9]/g, '');
         if (clean) {
+            // Format Rupiah (ribuan)
             inputElement.value = clean.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         } else {
             inputElement.value = '';
         }
     } else if (currency === 'USD') {
+        // Izinkan angka dan titik/koma (hanya satu)
         let clean = value.replace(/[^0-9.]/g, '');
         let parts = clean.split('.');
         if (parts.length > 2) {
@@ -766,6 +860,6 @@ function formatPriceInput(inputElement) {
         }
         inputElement.value = clean;
     } else {
-        inputElement.value = value.replace(/[^0-9.]/g, '');
+        // Biarkan input mentah untuk 'TBA' (memungkinkan 'FREE')
     }
 }
