@@ -4,6 +4,7 @@
    REVISI TERAKHIR: FIX PROTOKOL MAPS STANDAR & CLEAN UP LOGIC
    PERBAIKAN BARU: FIX BUG #1 (MAPS CSP), FIX BUG #9 (HARGA 'FREE'),
    DAN FIX LOGIKA FILTER/SHUFFLE PADA renderGrid.
+   PERBAIKAN TERBARU: FIX GOOGLE MAPS API KEY INVALID (Menggunakan Standard Embed)
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -723,10 +724,9 @@ function showPopup(id) {
     
     const mapQuery = encodeURIComponent(`${safeVenue}, ${safeCity}`);
     
-    // FIX BUG #1: Menggunakan pola URL Google Maps standar yang diizinkan di CSP
-    // Note: Kita menggunakan pola non-standar di sini karena pola standar butuh API key,
-    // Pola ini kompatibel dengan CSP yang telah dimodifikasi di vercel.json
-    const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=FAKE_KEY&q=${mapQuery}`;
+    // FIX KRITIS: PERBAIKAN GOOGLE MAPS API KEY INVALID
+    // MENGGUNAKAN PROTOKOL HTTPS STANDAR EMBED YANG DIDUKUNG CSP VERCEL
+    const mapEmbedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
     const mapLinkUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
     let dateDetail = formatDateIndo(new Date(c.rawDate + 'T00:00:00'));
