@@ -1,7 +1,7 @@
 /* ============================================================
    INFOKONSER.ID - ENGINE V3 (FINAL MASTER UPGRADE)
    REVISI KRITIS: FIX BUG TOAST STUCK & Perbaikan Bahasa
-   REVISI TERAKHIR: FIX PROTOKOL MAPS STANDAR
+   REVISI TERAKHIR: FIX PROTOKOL MAPS STANDAR & CLEAN UP LOGIC
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -751,14 +751,7 @@ function hidePreloader() {
 }
 
 function setupAddons() {
-    const backBtn = document.getElementById('backToTop');
-    if(backBtn) {
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 400) backBtn.classList.add('show');
-            else backBtn.classList.remove('show');
-        });
-    }
-
+    // FIX #3: Menghapus logika untuk #backToTop yang sudah dihapus dari HTML
     const toggleBtn = document.getElementById('togglePass');
     const passInput = document.getElementById('password');
     if(toggleBtn && passInput) {

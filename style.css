@@ -1,7 +1,7 @@
 /* ============================================================
    STYLE V3 - FINAL MASTER UPGRADE (26 POINTS)
-   REVISI 5: FIX POSISI TOMBOL BACK TO TOP & TOAST (Naik ke 200px)
-   REVISI 6: FIX BUG SCROLLBAR PUTIH DI KANAN (Overflow-x: hidden)
+   REVISI FINAL: HAPUS TOMBOL SCROLL TO TOP & ATUR ULANG TOAST POSITION
+   FIX CRITICAL BUG: Bottom Navigation Hilang di Mobile.
    ============================================================ */
 
 /* FONT IMPORT */
@@ -313,7 +313,9 @@ body::before {
 .close-btn:hover { background: var(--primary); color: black; transform: rotate(90deg); }
 
 .toast-container {
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+    position: fixed; 
+    bottom: 30px; /* Default desktop position */
+    left: 50%; transform: translateX(-50%) translateY(100px);
     background: #1a1a1a; border: 1px solid var(--primary); padding: 12px 25px;
     border-radius: 50px; display: flex; align-items: center; gap: 10px; z-index: 3000;
     transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -368,6 +370,8 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
         overflow-x: hidden;
     }
     .nav-links { display: none; }
+    
+    /* FIX KRITIS: Tampilkan Bottom Nav di Mobile */
     .bottom-nav { display: flex !important; } 
     
     /* KECILKAN & CENTER BRAND DI MOBILE */
@@ -408,15 +412,23 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     .input-dark { margin-bottom: 20px; }
     .form-row { display: flex; flex-direction: column; gap: 10px !important; }
     
-    /* REVISI FINAL POSISI TOMBOL BACK TO TOP DI MOBILE */
-    #backToTop { 
-        bottom: 170px; /* NAIKKAN POSISI ke 170px (Final Adjustment) */
-        right: 20px; 
+    /* TOAST POSISI AMAN */
+    .toast-container { 
+        bottom: 100px; /* Posisi aman di atas Bottom Nav Bar */
     }
-
-    /* TOAST JUGA DISESUAIKAN */
-    .toast-container { bottom: 170px; }
+    
+    /* HAPUS SEMUA STYLING TOMBOL BACK TO TOP */
+    #backToTop { display: none !important; }
 }
+
+/* BACK TO TOP BUTTON - HAPUS STYLING GLOBAL */
+#backToTop {
+    opacity: 0; 
+    visibility: hidden; 
+    pointer-events: none;
+    /* Styling lain dihapus karena elemen sudah dihilangkan dari HTML */
+}
+
 
 /* --- BOTTOM NAV (Mobile Only) --- */
 .bottom-nav {
@@ -444,24 +456,6 @@ footer { text-align: center; padding: 4rem 0; margin-top: 6rem; border-top: 1px 
     text-shadow: 1px 0 5px rgba(0, 242, 234, 0.5), -1px 0 5px rgba(79, 70, 229, 0.5);
 }
 
-/* BACK TO TOP BUTTON */
-#backToTop {
-    position: fixed; bottom: 30px; right: 30px;
-    width: 40px; height: 40px; 
-    background: rgba(2, 4, 8, 0.9); color: var(--primary); 
-    border-radius: 50%; border: 1px solid var(--primary); 
-    font-size: 1.1rem; cursor: pointer; 
-    z-index: 10000; 
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; visibility: hidden; transform: translateY(20px);
-    transition: 0.3s; box-shadow: 0 0 15px rgba(0, 242, 234, 0.4);
-}
-#backToTop.show { opacity: 1; visibility: visible; transform: translateY(0); }
-#backToTop:hover { 
-    transform: translateY(-5px) scale(1.05); 
-    background: var(--primary); color: black; 
-    box-shadow: 0 0 25px var(--primary-glow);
-}
 
 /* ZERO STATE & PRELOADER STYLES */
 .zero-state {
