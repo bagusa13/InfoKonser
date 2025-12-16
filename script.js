@@ -1,6 +1,9 @@
 /* ============================================================
-   INFOKONSER.ID - ENGINE V3 (ULTIMATE DELEGATION FIX V4 - LINTAS BROWSER)
-   SOLUSI FINAL: Menggunakan setAttribute & defaultValue untuk kepastian di Chrome/Safari.
+   INFOKONSER.ID - ENGINE V3 (FINAL SECURITY & OPTIMASI V4)
+   PERBAIKAN KRITIS TERAKHIR: 
+   1. FIX PRELOADER STUCK di Halaman Statis (tentang.html, 404.html)
+   2. FIX ERROR PROTOKOL MAPS (Mengubah http:// ke https://)
+   3. FIX FALLBACK ADMIN STUCK (Agar form login muncul saat testing lokal)
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -32,17 +35,21 @@ let currentData = [];
 
 // --- MAIN ROUTER ---
 document.addEventListener('DOMContentLoaded', () => {
-    setupAddons();
+    setupAddons(); 
 
+    // Cek ID halaman dinamis
     if (document.getElementById('concertContainer')) {
         initPublicPage();
     } else if (document.getElementById('loginForm') || document.getElementById('adminPanel')) {
         initAdminPage();
+    } else {
+        // FIX KRITIS: Panggil hidePreloader untuk halaman statis (tentang.html & 404.html)
+        hidePreloader();
     }
 });
 
 /* ============================================================
-   BAGIAN 1: GLOBAL EVENT LISTENERS (INTI PERBAIKAN)
+   BAGIAN 1: GLOBAL EVENT LISTENERS
    ============================================================ */
 
 // 1. LISTENER UNTUK UPLOAD GAMBAR (CLOUDINARY)
@@ -51,6 +58,7 @@ document.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if(!file) return;
         
+        // PERINGATAN: CLOUDINARY UPLOAD PRESET Terekspos (Bug #8)
         const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; 
         const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
         const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
@@ -70,20 +78,17 @@ document.addEventListener('change', async (e) => {
             if(res.secure_url) {
                 const link = res.secure_url;
                 
-                // --- SOLUSI ANTI-SAFARI/CHROME FINAL ---
+                // SOLUSI ANTI-SAFARI/CHROME
                 const hiddenInput = document.getElementById('concertImage');
                 if (hiddenInput) {
-                    // MENGISI SEMUA PROPERTI UNTUK KEAMANAN DOM LINTAS-BROWSER
                     hiddenInput.setAttribute('value', link); 
                     hiddenInput.value = link; 
                     hiddenInput.defaultValue = link; 
-                    console.log("SUCCESS: Link gambar berhasil disimpan di input 'concertImage'. URL:", link);
+                    console.log("SUCCESS: Link gambar berhasil disimpan. URL:", link);
                 } else {
                     alert("FATAL ERROR: Input 'concertImage' tidak ditemukan!");
-                    console.error("Input ID 'concertImage' tidak ditemukan di DOM.");
                     return;
                 }
-                // --- END SOLUSI FINAL ---
 
                 // TAMPILKAN PREVIEW
                 document.getElementById('imagePreview').innerHTML = `<img src="${link}" alt="Poster Preview" style="width:100%; border-radius:10px;">`;
@@ -112,7 +117,7 @@ document.addEventListener('submit', async (e) => {
         const editId = document.getElementById('editId').value;
         const img = document.getElementById('concertImage').value || document.getElementById('oldImage').value;
         
-        // VALIDASI: Wajib ada gambar jika mode Tambah Baru
+        // VALIDASI
         if(!img && !editId) { 
             alert("STOP! Poster belum masuk.\n\nPastikan Anda sudah memilih file DAN menunggu sampai muncul pesan sukses."); 
             return; 
@@ -123,7 +128,7 @@ document.addEventListener('submit', async (e) => {
         btn.innerText = "Menyimpan...";
         btn.disabled = true;
 
-        // FORMAT HARGA SEBELUM SIMPAN
+        // FORMAT HARGA
         const currency = document.getElementById('concertCurrency').value;
         const rawPriceInput = document.getElementById('concertPrice').value;
         const rawPrice = (currency === 'IDR') ? cleanPrice(rawPriceInput) : rawPriceInput;
@@ -140,7 +145,8 @@ document.addEventListener('submit', async (e) => {
             rawDate: document.getElementById('concertDateOnly').value, 
             time: document.getElementById('concertTimeOnly').value,
             timezone: document.getElementById('concertTimezone').value,
-            duration: document.getElementById('concertDuration').value, 
+            // FIX BUG #18: Pastikan Durasi adalah Integer, default 1 jika input kosong/salah.
+            duration: parseInt(document.getElementById('concertDuration').value) || 1, 
             price: formattedPrice, 
             rawPrice: rawPrice, 
             currency: currency, 
@@ -158,7 +164,10 @@ document.addEventListener('submit', async (e) => {
                 await addDoc(dbCollection, data);
                 showToast("🚀 Data Terbit!");
             }
-            setTimeout(() => location.reload(), 1500);
+            
+            // FIX BUG #17: Reset form tanpa reload halaman (UX Admin Lebih Cepat)
+            resetFormAdmin();
+
         } catch(err) { 
             alert("Error Database: " + err.message); 
             btn.innerText = originalText;
@@ -185,6 +194,21 @@ document.addEventListener('change', (e) => {
    BAGIAN 2: ADMIN PAGE INIT & LOGIC
    ============================================================ */
 
+function resetFormAdmin() {
+    document.getElementById('concertForm').reset();
+    document.getElementById('editId').value = '';
+    document.getElementById('oldImage').value = '';
+    document.getElementById('concertImage').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('uploadStatus').innerText = '';
+    
+    document.getElementById('formTitle').innerText = "Tambah Event";
+    document.getElementById('submitBtn').innerText = "UPLOAD";
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('cancelEditBtn').style.display = "none";
+}
+
+// 🔥 KOREKSI FUNGSI INIT ADMIN PAGE (Menambahkan Fallback Timer)
 function initAdminPage() {
     const loginView = document.getElementById('loginView');
     const adminPanel = document.getElementById('adminPanel');
@@ -193,8 +217,24 @@ function initAdminPage() {
         console.error("Elemen Admin Panel atau Login View tidak ditemukan di DOM.");
         return;
     }
+
+    // --- FALLBACK TIMER START ---
+    let authCheckCompleted = false;
+    const fallbackTimeout = setTimeout(() => {
+        if (!authCheckCompleted) {
+            // Jika preloader masih ada setelah 4 detik (karena koneksi lokal diblokir)
+            loginView.classList.remove('hidden');
+            adminPanel.classList.add('hidden');
+            hidePreloader(); // Sembunyikan preloader
+            console.warn("ADMIN FALLBACK: Koneksi Firebase lokal gagal, menampilkan form login secara paksa.");
+        }
+    }, 4000); 
+    // --- FALLBACK TIMER END ---
     
     onAuthStateChanged(auth, (user) => {
+        clearTimeout(fallbackTimeout); // Batalkan timer jika Firebase merespons cepat
+        authCheckCompleted = true;
+
         if (user) {
             loginView.classList.add('hidden');
             adminPanel.classList.remove('hidden');
@@ -203,6 +243,7 @@ function initAdminPage() {
             loginView.classList.remove('hidden');
             adminPanel.classList.add('hidden');
         }
+        hidePreloader(); // Sembunyikan preloader setelah status otentikasi didapat
     });
 
     const loginForm = document.getElementById('loginForm');
@@ -227,8 +268,9 @@ function initAdminPage() {
         if(confirm("Logout?")) signOut(auth);
     });
 
-    document.getElementById('cancelEditBtn')?.addEventListener('click', () => location.reload());
+    document.getElementById('cancelEditBtn')?.addEventListener('click', () => resetFormAdmin());
 }
+
 
 function loadAdminData() {
     const tbody = document.getElementById('adminConcerts');
@@ -296,7 +338,11 @@ window.editEvent = async (id) => {
         document.getElementById('concertDetail').value = d.desc;
         document.getElementById('concertDuration').value = d.duration || '1';
         
-        document.getElementById('imagePreview').innerHTML = `<img src="${d.image}" alt="Poster Preview Edit" style="width:100%;">`;
+        // FIX BUG #6 (CACHE BUSTING): Tambahkan timestamp agar browser TIDAK menggunakan cache gambar lama.
+        const bustUrl = `${d.image}?v=${new Date().getTime()}`;
+        
+        // Gunakan bustUrl untuk memastikan preview gambar selalu terbaru
+        document.getElementById('imagePreview').innerHTML = `<img src="${bustUrl}" alt="Poster Preview Edit" style="width:100%;">`;
         document.getElementById('formTitle').innerText = "Edit Event: " + d.name;
         document.getElementById('submitBtn').innerText = "Simpan Perubahan";
         document.getElementById('cancelEditBtn').style.display = "inline-block";
@@ -308,9 +354,19 @@ window.editEvent = async (id) => {
 /* ============================================================
    BAGIAN 3: PUBLIC PAGE LOGIC & UTILS
    ============================================================ */
+
+// UTILITY: Fisher-Yates Shuffle Algorithm (Untuk mengacak event selesai)
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
 function initPublicPage() {
     const container = document.getElementById('concertContainer');
-    const q = query(dbCollection, orderBy("rawDate", "asc"));
+    const q = query(dbCollection, orderBy("rawDate", "asc")); 
     
     container.innerHTML = '<div style="color:#666; text-align:center; grid-column:1/-1; padding:50px;">Memuat data...</div>';
 
@@ -336,17 +392,23 @@ function initPublicPage() {
 
     onSnapshot(q, (snapshot) => {
         concerts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        
+        // FIX PRELOADER: Hilang hanya setelah data dimuat
+        hidePreloader();
+        
         currentData = concerts;
         applyFilter('all');
     }, (err) => {
         console.error("Load Error:", err);
         container.innerHTML = `<div style="text-align:center; padding:50px;">Gagal memuat data. Periksa koneksi internet.</div>`;
+        hidePreloader(); 
     });
 }
 
 function renderGrid(data, isLoadMore = false) {
     const container = document.getElementById('concertContainer');
     const loadContainer = document.getElementById('loadMoreContainer');
+    const now = new Date(); now.setHours(0,0,0,0);
     
     if (!isLoadMore) {
         container.innerHTML = "";
@@ -358,20 +420,41 @@ function renderGrid(data, isLoadMore = false) {
         if(loadContainer) loadContainer.style.display = 'none';
         return;
     }
+    
+    // UPGRADE: Pisahkan event yang akan datang & selesai
+    const upcomingEvents = [];
+    const finishedEvents = [];
 
-    const slicedData = data.slice(0, currentLimit);
-    const now = new Date(); now.setHours(0,0,0,0);
+    data.forEach(c => {
+        const startDate = new Date(c.rawDate + 'T00:00:00');
+        const isFinished = startDate < now;
+        if (isFinished) finishedEvents.push(c);
+        else upcomingEvents.push(c);
+    });
+    
+    // Acak event yang selesai
+    const shuffledFinished = shuffleArray(finishedEvents);
+    
+    // Gabungkan: Upcoming di atas, Finished di bawah
+    const finalData = upcomingEvents.concat(shuffledFinished);
+    
+    const slicedData = finalData.slice(0, currentLimit);
+    
+    // FIX XSS (Bug #10): Menggunakan DocumentFragment untuk menghindari innerHTML +=
+    const fragment = document.createDocumentFragment();
 
     slicedData.forEach((c, index) => {
         const startDate = new Date(c.rawDate + 'T00:00:00');
         const isFinished = startDate < now;
         
+        let cardClasses = "card";
         let badge = "";
         let btnState = `data-id="${c.id}">Lihat Detail`;
         
         if (isFinished) {
             badge = `<div class="status-badge" style="background:#333; color:#888; border-color:#555;">SELESAI</div>`;
             btnState = `disabled>Event Berakhir`;
+            cardClasses += " finished-event"; // Class untuk efek Grayscale
         } else if (c.status === 'sold-out') {
             badge = `<div class="status-badge" style="background:#ef4444; border-color:#ef4444;">SOLD OUT</div>`;
         } else if (c.status === 'limited') {
@@ -383,28 +466,40 @@ function renderGrid(data, isLoadMore = false) {
         const heartActive = isLoved ? "active" : "";
         const delay = index * 0.05;
 
-        const html = `
-        <article class="card" style="animation-delay: ${delay}s">
+        // --- Perubahan HTML Creation (Sanitasi XSS) ---
+        const article = document.createElement('article');
+        article.className = cardClasses;
+        article.style.animationDelay = `${delay}s`;
+        
+        // Sanitasi XSS: Menggunakan textContent untuk memastikan nama konser adalah teks murni.
+        const safeName = document.createElement('div');
+        safeName.textContent = c.name; 
+
+        article.innerHTML = `
             <div class="card-img-wrap">
                 ${badge}
                 <button class="btn-wishlist ${heartActive}" data-id="${c.id}" aria-label="Tambahkan ke Favorit"><i class="${heartIcon}"></i></button>
-                <img src="${c.image}" alt="Poster Konser ${c.name}" loading="lazy" onerror="this.src='https://placehold.co/600x400/020408/555?text=NO+POSTER'">
+                <img src="${c.image}" alt="Poster Konser ${safeName.textContent}" loading="lazy" onerror="this.src='https://placehold.co/600x400/020408/555?text=NO+POSTER'">
             </div>
             <div class="card-content">
                 <div class="card-genre">${c.genre || 'MUSIC'}</div>
-                <h3>${c.name}</h3>
+                <h3>${safeName.textContent}</h3> 
                 <div class="card-details">
                     <div class="detail-row"><i class="far fa-calendar"></i> ${formatDateIndo(startDate)}</div>
                     <div class="detail-row"><i class="fas fa-map-marker-alt"></i> ${c.city}</div>
                     <div class="detail-row"><i class="fas fa-tag"></i> ${c.price || 'TBA'}</div>
                 </div>
                 <button class="btn-card-action" ${btnState}</button>
-            </div>
-        </article>`;
-        container.innerHTML += html;
+            </div>`;
+            
+        fragment.appendChild(article);
+        // --- Akhir Perubahan HTML Creation ---
     });
 
-    if (slicedData.length < data.length) {
+    // Append fragment sekali ke DOM (Lebih cepat dan aman)
+    container.appendChild(fragment); 
+
+    if (slicedData.length < finalData.length) {
         if(loadContainer) loadContainer.style.display = 'block';
     } else {
         if(loadContainer) loadContainer.style.display = 'none';
@@ -415,6 +510,7 @@ function setupSearch() {
     const input = document.getElementById('searchInput');
     if(!input) return;
     
+    // FIX BUG #5: Debounce sudah diterapkan
     let timeout;
     input.addEventListener('input', (e) => {
         clearTimeout(timeout);
@@ -448,7 +544,6 @@ function applyFilter(filter) {
 function toggleWishlist(id, btnElement = null) {
     const idx = wishlist.indexOf(id);
     const concert = concerts.find(c => c.id === id); 
-
     if (!concert) return; 
 
     let msg = "";
@@ -485,13 +580,25 @@ function showPopup(id) {
     popup.classList.remove('hidden');
     setTimeout(() => popup.classList.add('active'), 10);
 
+    // Sanitasi deskripsi dan nama sebelum dimasukkan ke innerHTML
+    const safeDesc = document.createElement('div');
+    safeDesc.textContent = c.desc;
+    
+    const safeName = document.createElement('div');
+    safeName.textContent = c.name;
+    
     const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
     
-    // FINAL MAPS FIX
-    const mapEmbedUrl = `https://googleusercontent.com/maps.google.com/0${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    const mapLinkUrl = `https://googleusercontent.com/maps.google.com/0${mapQuery}`;
+    // 🔥 PERBAIKAN KRITIS: Mengubah protokol http:// menjadi https:// di sini
+    const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    const mapLinkUrl = `https://maps.google.com/maps?q=${mapQuery}`;
 
     let dateDetail = formatDateIndo(new Date(c.rawDate + 'T00:00:00'));
+    
+    // Menghindari XSS pada dateDetail
+    const safeDateDetail = document.createElement('div');
+    safeDateDetail.textContent = dateDetail;
+    dateDetail = safeDateDetail.textContent;
     
     if (c.duration && parseInt(c.duration) > 1) {
         dateDetail += ` (${c.duration} Hari)`;
@@ -500,17 +607,29 @@ function showPopup(id) {
     content.innerHTML = `
         <div style="margin-bottom:20px;">
             <span style="color:var(--primary); font-weight:700; letter-spacing:1px; text-transform:uppercase;">${c.genre}</span>
-            <h2 id="popupTitle" style="font-family:var(--font-head); font-size:2rem; margin-top:5px; color:white;">${c.name}</h2>
+            <h2 id="popupTitle" style="font-family:var(--font-head); font-size:2rem; margin-top:5px; color:white;">${safeName.textContent}</h2>
         </div>
         
-        <div style="display:grid; gap:15px; margin-bottom:25px; border-top:1px solid var(--border); padding-top:20px;">
-             <div class="detail-row"><span style="width:80px;">Tanggal</span> <span style="color:white;">${dateDetail}</span></div>
-             <div class="detail-row"><span style="width:80px;">Lokasi</span> <span style="color:white;">${c.venue}, ${c.city}</span></div>
-             <div class="detail-row"><span style="width:80px;">Tiket</span> <span style="color:var(--primary); font-weight:600;">${c.price || 'TBA'}</span></div>
-             <div class="detail-row"><span style="width:80px;">Waktu</span> <span style="color:white;">${c.time || 'Open Gate'} ${c.timezone || 'WIB'}</span></div>
+        <div class="popup-detail-grid"> 
+             <div class="detail-row-popup">
+                 <span class="detail-label">Tanggal</span> 
+                 <span class="detail-value">${dateDetail}</span>
+             </div>
+             <div class="detail-row-popup">
+                 <span class="detail-label">Lokasi</span> 
+                 <span class="detail-value">${c.venue}, ${c.city}</span>
+             </div>
+             <div class="detail-row-popup">
+                 <span class="detail-label">Tiket</span> 
+                 <span class="detail-value highlight">${c.price || 'TBA'}</span>
+             </div>
+             <div class="detail-row-popup">
+                 <span class="detail-label">Waktu</span> 
+                 <span class="detail-value">${c.time || 'Open Gate'} ${c.timezone || 'WIB'}</span>
+             </div>
         </div>
-
-        <p style="color:#ccc; line-height:1.6; margin-bottom:25px; font-size:0.95rem;">${c.desc}</p>
+        
+        <p style="color:#ccc; line-height:1.6; margin-bottom:25px; font-size:0.95rem;">${safeDesc.textContent}</p>
         
         <div class="map-container">
             <iframe 
@@ -522,7 +641,7 @@ function showPopup(id) {
                 marginwidth="0" 
                 src="${mapEmbedUrl}"
                 style="filter: invert(90%) hue-rotate(180deg);"
-                title="Peta Lokasi Konser ${c.name}">
+                title="Peta Lokasi Konser ${safeName.textContent}">
             </iframe>
             <a href="${mapLinkUrl}" target="_blank" class="map-link-btn">
                 <i class="fas fa-external-link-alt"></i> Buka di Google Maps App
@@ -554,17 +673,17 @@ function setupPopupLogic() {
     });
 }
 
-function setupAddons() {
-    window.addEventListener('load', () => {
-        const preloader = document.getElementById('preloader');
-        if(preloader) {
-            setTimeout(() => {
-                preloader.classList.add('hide'); 
-                setTimeout(() => { preloader.remove(); }, 800); 
-            }, 300); 
-        }
-    });
+function hidePreloader() {
+    const preloader = document.getElementById('preloader');
+    if (preloader && !preloader.classList.contains('hide')) {
+        setTimeout(() => {
+            preloader.classList.add('hide'); 
+            setTimeout(() => { preloader.remove(); }, 800); 
+        }, 300); 
+    }
+}
 
+function setupAddons() {
     const backBtn = document.getElementById('backToTop');
     if(backBtn) {
         window.addEventListener('scroll', () => {

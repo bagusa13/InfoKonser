@@ -1,6 +1,7 @@
 /* ============================================================
    STYLE V3 - FINAL CLEANED & VERIFIED (CLOUD READY)
    PERBAIKAN: Grid Flex, Vendor Prefix Removed, Toast Mobile Fix
+   PERBAIKAN PAKET 2: FIX POPUP UX & CARD GRAYSCALE
    ============================================================ */
 
 /* FONT IMPORT (Sebaiknya di-load di HTML untuk performa, tapi jika diperlukan di sini): */
@@ -66,6 +67,19 @@ body::before {
     padding: 0 1.5rem; /* Padding default 1.5rem */
 }
 .hidden { display: none !important; }
+
+/* FIX A11Y: Screen Reader Only (Digunakan di admin.html) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
 
 /* UTILS TEXT */
 .text-cyan { color: var(--primary); text-shadow: 0 0 15px rgba(0, 242, 234, 0.3); }
@@ -183,6 +197,20 @@ body::before {
     border-color: rgba(255,255,255,0.25);
 }
 
+/* UPGRADE: GRASCALE untuk event selesai (Bug Baru) */
+.card.finished-event {
+    opacity: 0.6;
+    filter: grayscale(80%);
+    pointer-events: none; 
+    transition: 0.5s;
+    transform: none; /* Matikan transform hover */
+}
+.card.finished-event:hover {
+    box-shadow: none;
+    border-color: var(--border);
+    filter: grayscale(80%);
+}
+
 .card-img-wrap { height: 220px; position: relative; overflow: hidden; }
 .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 0.7s; }
 .card:hover .card-img-wrap img { transform: scale(1.05); }
@@ -271,6 +299,43 @@ body::before {
 .toast-container.show { transform: translateX(-50%) translateY(0); }
 .toast-msg { color: white; font-weight: 500; font-size: 0.9rem; }
 .toast-icon { color: var(--primary); }
+
+/* UPGRADE: POPUP DETAIL GRID (Peningkatan Alignment & Pemisahan Detail) */
+.popup-detail-grid {
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    margin-bottom: 25px; 
+    border-top: 1px solid var(--border); 
+    padding-top: 20px;
+}
+.detail-row-popup {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.05); 
+}
+.detail-row-popup:last-child {
+    border-bottom: none; 
+    padding-bottom: 0;
+}
+.detail-label {
+    width: 90px; 
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+.detail-value {
+    color: white;
+    font-weight: 500;
+    text-align: right; 
+    flex-grow: 1; 
+}
+.detail-value.highlight {
+    color: var(--primary); 
+    font-weight: 700;
+}
 
 /* --- ADMIN PANEL --- */
 .admin-login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
