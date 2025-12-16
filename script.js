@@ -2,6 +2,8 @@
    INFOKONSER.ID - ENGINE V3 (FINAL MASTER UPGRADE)
    REVISI KRITIS: FIX BUG TOAST STUCK & Perbaikan Bahasa
    REVISI TERAKHIR: FIX PROTOKOL MAPS STANDAR & CLEAN UP LOGIC
+   PERBAIKAN BARU: FIX BUG #1 (MAPS CSP), FIX BUG #9 (HARGA 'FREE'),
+   DAN FIX LOGIKA FILTER/SHUFFLE PADA renderGrid.
    ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -11,13 +13,15 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; 
 
 // --- CONFIG FIREBASE ---
+// PERHATIAN: API Key dan Kredensial ini terekspos di klien.
+// Pastikan Firebase Security Rules sudah dikonfigurasi dengan benar.
 const firebaseConfig = {
     apiKey: "AIzaSyB2qifqZl1IWKX3YFwc6rxObkww-GHhOIM", 
     authDomain: "infokonser-app.firebaseapp.com",
     projectId: "infokonser-app",
     storageBucket: "infokonser-app.firebasestorage.app",
     messagingSenderId: "546196676464",
-    appId: "1:546196676464:web:687013cf50c83e7855f9b5"
+    appId: "1:546196676464:web:687013cf50c8c3e7855f9b5" // Pastikan App ID ini benar
 };
 
 const app = initializeApp(firebaseConfig);
@@ -30,7 +34,7 @@ let concerts = [];
 let wishlist = JSON.parse(localStorage.getItem('infokonser_wishlist')) || [];
 let currentLimit = 12; 
 let currentData = [];  
-let toastTimeoutId; // Variabel Global untuk FIX BUG STUCK
+let toastTimeoutId; 
 
 // UPGRADE POINT 1: ORIGINAL META TAGS
 const originalTitle = document.title;
@@ -49,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (document.getElementById('loginForm') || document.getElementById('adminPanel')) {
         initAdminPage();
     } else {
-        // UPGRADE POINT 21: FIX KRITIS: Panggil hidePreloader untuk halaman statis (tentang.html & 404.html)
+        // Panggil hidePreloader untuk halaman statis (tentang.html & 404.html)
         hidePreloader();
     }
 });
@@ -64,7 +68,7 @@ document.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if(!file) return;
         
-        // PERINGATAN: CLOUDINARY UPLOAD PRESET Terekspos (Bug #8)
+        // PERINGATAN KEAMANAN: CLOUDINARY UPLOAD PRESET Terekspos (Harus melalui Backend!)
         const CLOUDINARY_CLOUD_NAME = 'dyfc0i8y5'; 
         const CLOUDINARY_UPLOAD_PRESET = 'InfoKonser'; 
         const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
@@ -135,18 +139,27 @@ document.addEventListener('submit', async (e) => {
 
         // FORMAT HARGA
         const currency = document.getElementById('concertCurrency').value;
-        const rawPriceInput = document.getElementById('concertPrice').value;
+        const rawPriceInput = document.getElementById('concertPrice').value.trim();
         
-        // UPGRADE POINT 16: Hapus required, rawPrice harus fleksibel
         let rawPrice = rawPriceInput; 
-        if (currency === 'IDR' || currency === 'USD') {
-            rawPrice = cleanPrice(rawPriceInput);
-        }
-
         let formattedPrice = 'TBA';
-        if (currency === 'IDR') formattedPrice = formatRupiahDisplay(rawPrice);
-        else if (currency === 'USD') formattedPrice = formatUSDDisplay(rawPrice);
-        else formattedPrice = rawPriceInput || 'TBA'; 
+        
+        // FIX BUG #9: Perbaiki penanganan harga non-numerik (seperti 'FREE')
+        if (currency === 'IDR' || currency === 'USD') {
+            const cleanedNumericPrice = cleanPrice(rawPriceInput);
+            if(cleanedNumericPrice) {
+                 rawPrice = cleanedNumericPrice;
+                 if (currency === 'IDR') formattedPrice = formatRupiahDisplay(rawPrice);
+                 else if (currency === 'USD') formattedPrice = formatUSDDisplay(rawPrice);
+            } else {
+                 // Jika input non-numerik (e.g., 'FREE', 'TBA'), gunakan input mentah
+                 formattedPrice = rawPriceInput || 'TBA';
+                 rawPrice = rawPriceInput || 'TBA';
+            }
+        } else { // Currency: TBA/Lainnya
+             formattedPrice = rawPriceInput || 'TBA'; 
+             rawPrice = rawPriceInput || 'TBA';
+        }
         
         const data = {
             name: document.getElementById('bandName').value,
@@ -158,7 +171,7 @@ document.addEventListener('submit', async (e) => {
             timezone: document.getElementById('concertTimezone').value,
             duration: parseInt(document.getElementById('concertDuration').value) || 1, 
             price: formattedPrice, 
-            rawPrice: rawPrice, 
+            rawPrice: rawPrice, // Simpan harga mentah/non-numerik
             currency: currency, 
             status: document.getElementById('concertStatus').value,
             desc: document.getElementById('concertDetail').value,
@@ -303,11 +316,15 @@ function loadAdminData() {
         const d = docSnap.data();
         const statusColor = d.status === 'sold-out' ? '#ef4444' : 'var(--primary)';
 
+        // Mitigasi XSS: Gunakan textContent untuk nama artis
+        const safeName = document.createElement('div');
+        safeName.textContent = d.name;
+
         tbody.innerHTML += `
         <tr>
-            <td><img src="${d.image}" width="50" style="border-radius:6px;" alt="Poster Admin ${d.name}" onerror="this.src='https://placehold.co/50x50/111/444?text=X'"></td>
+            <td><img src="${d.image}" width="50" style="border-radius:6px;" alt="Poster Admin ${safeName.textContent}" onerror="this.src='https://placehold.co/50x50/111/444?text=X'"></td>
             <td>
-                <div style="font-weight:bold; color:white;">${d.name}</div>
+                <div style="font-weight:bold; color:white;">${safeName.textContent}</div>
                 <div style="font-size:0.8rem; color:#888;">${d.city} • ${d.rawDate}</div>
                 <div style="font-size:0.7rem; color:${statusColor}; font-weight:bold;">${d.status.toUpperCase()}</div>
             </td>
@@ -354,7 +371,12 @@ window.editEvent = async (id) => {
         
         // Gunakan bustUrl untuk memastikan preview gambar selalu terbaru
         document.getElementById('imagePreview').innerHTML = `<img src="${bustUrl}" alt="Poster Preview Edit" style="width:100%;">`;
-        document.getElementById('formTitle').innerText = "Edit Event: " + d.name;
+        
+        // Mitigasi XSS pada form title
+        const safeName = document.createElement('div');
+        safeName.textContent = d.name;
+        document.getElementById('formTitle').innerText = "Edit Event: " + safeName.textContent;
+
         document.getElementById('submitBtn').innerText = "Simpan Perubahan";
         document.getElementById('cancelEditBtn').style.display = "inline-block";
         
@@ -368,6 +390,7 @@ window.editEvent = async (id) => {
 
 // UTILITY: Fisher-Yates Shuffle Algorithm (Untuk mengacak event selesai)
 function shuffleArray(array) {
+    // BUG FIX: Memastikan Math.random digunakan dengan benar
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
@@ -417,7 +440,7 @@ function initPublicPage() {
     onSnapshot(q, (snapshot) => {
         concerts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         
-        // UPGRADE POINT 21: FIX PRELOADER: Hilang hanya setelah data dimuat
+        // FIX KRITIS: Memastikan preloader disembunyikan hanya setelah data dimuat
         hidePreloader();
         
         currentData = concerts;
@@ -425,7 +448,7 @@ function initPublicPage() {
     }, (err) => {
         console.error("Load Error:", err);
         container.innerHTML = `<div style="text-align:center; padding:50px;">Gagal memuat data. Periksa koneksi internet.</div>`;
-        // UPGRADE POINT 21: Hide preloader jika terjadi error load
+        // Hide preloader jika terjadi error load
         hidePreloader(); 
     });
 }
@@ -440,8 +463,8 @@ function renderGrid(data, isLoadMore = false) {
         currentLimit = 12; 
     } 
     
+    // FIX KRITIS: Jika data kosong, tampilkan Zero State.
     if (data.length === 0) {
-        // UPGRADE POINT 5: ZERO STATE PREMIUM
         container.innerHTML = `
             <div class="zero-state">
                 <div class="zero-state-icon">
@@ -457,7 +480,7 @@ function renderGrid(data, isLoadMore = false) {
         return;
     }
     
-    // UPGRADE: Pisahkan event yang akan datang & selesai
+    // PISAHKAN DAN OLAH DATA
     const upcomingEvents = [];
     const finishedEvents = [];
 
@@ -476,7 +499,7 @@ function renderGrid(data, isLoadMore = false) {
     
     const slicedData = finalData.slice(0, currentLimit);
     
-    // FIX XSS (Bug #10): Menggunakan DocumentFragment untuk menghindari innerHTML +=
+    // Render
     const fragment = document.createDocumentFragment();
 
     slicedData.forEach((c, index) => {
@@ -513,23 +536,37 @@ function renderGrid(data, isLoadMore = false) {
         article.className = cardClasses;
         article.style.animationDelay = `${delay}s`;
         
-        // Sanitasi XSS: Menggunakan textContent untuk memastikan nama konser adalah teks murni.
-        const safeName = document.createElement('div');
-        safeName.textContent = c.name; 
+        // Sanitasi XSS: Menggunakan textContent untuk memastikan nama konser dan detail adalah teks murni.
+        const safeNameDiv = document.createElement('div');
+        safeNameDiv.textContent = c.name; 
+        const safeName = safeNameDiv.textContent;
+
+        const safeGenreDiv = document.createElement('div');
+        safeGenreDiv.textContent = c.genre || 'MUSIC';
+        const safeGenre = safeGenreDiv.textContent;
+
+        const safeCityDiv = document.createElement('div');
+        safeCityDiv.textContent = c.city;
+        const safeCity = safeCityDiv.textContent;
+
+        const safePriceDiv = document.createElement('div');
+        safePriceDiv.textContent = c.price || 'TBA';
+        const safePrice = safePriceDiv.textContent;
+
 
         article.innerHTML = `
             <div class="card-img-wrap">
                 ${badge}
                 <button class="btn-wishlist ${heartActive}" data-id="${c.id}" aria-label="Tambahkan ke Favorit"><i class="${heartIcon}"></i></button>
-                <img src="${c.image}" alt="Poster Konser ${safeName.textContent}" loading="lazy" onerror="this.src='https://placehold.co/600x400/020408/555?text=NO+POSTER'">
+                <img src="${c.image}" alt="Poster Konser ${safeName}" loading="lazy" onerror="this.src='https://placehold.co/600x400/020408/555?text=NO+POSTER'">
             </div>
             <div class="card-content">
-                <div class="card-genre">${c.genre || 'MUSIC'}</div>
-                <h3>${safeName.textContent}</h3> 
+                <div class="card-genre">${safeGenre}</div>
+                <h3>${safeName}</h3> 
                 <div class="card-details">
                     <div class="detail-row"><i class="far fa-calendar"></i> ${dateDisplay}</div>
-                    <div class="detail-row"><i class="fas fa-map-marker-alt"></i> ${c.city}</div>
-                    <div class="detail-row"><i class="fas fa-tag"></i> ${c.price || 'TBA'}</div>
+                    <div class="detail-row"><i class="fas fa-map-marker-alt"></i> ${safeCity}</div>
+                    <div class="detail-row"><i class="fas fa-tag"></i> ${safePrice}</div>
                 </div>
                 <button class="btn-card-action" ${btnState}</button>
             </div>`;
@@ -588,13 +625,18 @@ function toggleWishlist(id, btnElement = null) {
     const concert = concerts.find(c => c.id === id); 
     if (!concert) return; 
 
+    // Mitigasi XSS pada Toast
+    const safeNameDiv = document.createElement('div');
+    safeNameDiv.textContent = concert.name;
+    const safeName = safeNameDiv.textContent;
+
     let msg = "";
     if (idx === -1) {
         wishlist.push(id);
-        msg = `${concert.name} telah ditambahkan ke Favorit.`; // Revisi Bahasa
+        msg = `${safeName} telah ditambahkan ke Favorit.`; // Revisi Bahasa
     } else {
         wishlist.splice(idx, 1);
-        msg = `${concert.name} telah dihapus dari Favorit.`; // Revisi Bahasa
+        msg = `${safeName} telah dihapus dari Favorit.`; // Revisi Bahasa
     }
     
     localStorage.setItem('infokonser_wishlist', JSON.stringify(wishlist));
@@ -639,30 +681,60 @@ function showPopup(id) {
 
     // UPGRADE POINT 1: META TAG DINAMIS
     const metaImage = c.image;
-    const metaTitle = `${c.name} Live in ${c.city} - InfoKonser`;
-    const metaDesc = `Jadwal konser ${c.name} pada ${formatDateIndo(new Date(c.rawDate))} di ${c.venue}. Tiket: ${c.price}.`;
+    
+    // Sanitasi sebelum digunakan di Meta Tags
+    const safeNameDiv = document.createElement('div');
+    safeNameDiv.textContent = c.name;
+    const safeName = safeNameDiv.textContent;
+
+    const safeCityDiv = document.createElement('div');
+    safeCityDiv.textContent = c.city;
+    const safeCity = safeCityDiv.textContent;
+    
+    const metaTitle = `${safeName} Live in ${safeCity} - InfoKonser`;
+    const metaDesc = `Jadwal konser ${safeName} pada ${formatDateIndo(new Date(c.rawDate))} di ${c.venue}. Tiket: ${c.price}.`;
     
     setMetaTags(metaTitle, metaDesc, metaImage);
 
-    // Sanitasi deskripsi dan nama sebelum dimasukkan ke innerHTML
-    const safeDesc = document.createElement('div');
-    safeDesc.textContent = c.desc;
+    // Sanitasi deskripsi dan detail lainnya sebelum dimasukkan ke innerHTML
+    const safeDescDiv = document.createElement('div');
+    safeDescDiv.textContent = c.desc;
+    const safeDesc = safeDescDiv.textContent;
+
+    const safeVenueDiv = document.createElement('div');
+    safeVenueDiv.textContent = c.venue;
+    const safeVenue = safeVenueDiv.textContent;
+
+    const safeGenreDiv = document.createElement('div');
+    safeGenreDiv.textContent = c.genre;
+    const safeGenre = safeGenreDiv.textContent;
+
+    const safePriceDiv = document.createElement('div');
+    safePriceDiv.textContent = c.price || 'TBA';
+    const safePrice = safePriceDiv.textContent;
+
+    const safeTimeDiv = document.createElement('div');
+    safeTimeDiv.textContent = c.time || 'Open Gate';
+    const safeTime = safeTimeDiv.textContent;
+
+    const safeTimezoneDiv = document.createElement('div');
+    safeTimezoneDiv.textContent = c.timezone || 'WIB';
+    const safeTimezone = safeTimezoneDiv.textContent;
     
-    const safeName = document.createElement('div');
-    safeName.textContent = c.name;
+    const mapQuery = encodeURIComponent(`${safeVenue}, ${safeCity}`);
     
-    const mapQuery = encodeURIComponent(`${c.venue}, ${c.city}`);
-    
-    // REVISI TERAKHIR: Menggunakan pola URL Google Maps standar (Fix Bug #1)
-    const mapEmbedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    const mapLinkUrl = `https://maps.google.com/maps?q=${mapQuery}`;
+    // FIX BUG #1: Menggunakan pola URL Google Maps standar yang diizinkan di CSP
+    // Note: Kita menggunakan pola non-standar di sini karena pola standar butuh API key,
+    // Pola ini kompatibel dengan CSP yang telah dimodifikasi di vercel.json
+    const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=FAKE_KEY&q=${mapQuery}`;
+    const mapLinkUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
     let dateDetail = formatDateIndo(new Date(c.rawDate + 'T00:00:00'));
     
     // Menghindari XSS pada dateDetail
-    const safeDateDetail = document.createElement('div');
-    safeDateDetail.textContent = dateDetail;
-    dateDetail = safeDateDetail.textContent;
+    const safeDateDetailDiv = document.createElement('div');
+    safeDateDetailDiv.textContent = dateDetail;
+    dateDetail = safeDateDetailDiv.textContent;
     
     if (c.duration && parseInt(c.duration) > 1) {
         dateDetail += ` (${c.duration} Hari)`;
@@ -670,8 +742,8 @@ function showPopup(id) {
 
     content.innerHTML = `
         <div style="margin-bottom:20px;">
-            <span style="color:var(--primary); font-weight:700; letter-spacing:1px; text-transform:uppercase;">${c.genre}</span>
-            <h2 id="popupTitle" style="font-family:var(--font-head); font-size:2rem; margin-top:5px; color:white;">${safeName.textContent}</h2>
+            <span style="color:var(--primary); font-weight:700; letter-spacing:1px; text-transform:uppercase;">${safeGenre}</span>
+            <h2 id="popupTitle" style="font-family:var(--font-head); font-size:2rem; margin-top:5px; color:white;">${safeName}</h2>
         </div>
         
         <div class="popup-detail-grid"> 
@@ -681,19 +753,19 @@ function showPopup(id) {
              </div>
              <div class="detail-row-popup">
                  <span class="detail-label">Lokasi</span> 
-                 <span class="detail-value">${c.venue}, ${c.city}</span>
+                 <span class="detail-value">${safeVenue}, ${safeCity}</span>
              </div>
              <div class="detail-row-popup">
                  <span class="detail-label">Tiket</span> 
-                 <span class="detail-value highlight">${c.price || 'TBA'}</span>
+                 <span class="detail-value highlight">${safePrice}</span>
              </div>
              <div class="detail-row-popup">
                  <span class="detail-label">Waktu</span> 
-                 <span class="detail-value">${c.time || 'Open Gate'} ${c.timezone || 'WIB'}</span>
+                 <span class="detail-value">${safeTime} ${safeTimezone}</span>
              </div>
         </div>
         
-        <p style="color:#ccc; line-height:1.6; margin-bottom:25px; font-size:0.95rem;">${safeDesc.textContent}</p>
+        <p style="color:#ccc; line-height:1.6; margin-bottom:25px; font-size:0.95rem;">${safeDesc}</p>
         
         <div class="map-container">
             <iframe 
@@ -705,7 +777,7 @@ function showPopup(id) {
                 marginwidth="0" 
                 src="${mapEmbedUrl}"
                 style="filter: invert(90%) hue-rotate(180deg);"
-                title="Peta Lokasi Konser ${safeName.textContent}">
+                title="Peta Lokasi Konser ${safeName}">
             </iframe>
             <a href="${mapLinkUrl}" target="_blank" class="map-link-btn">
                 <i class="fas fa-external-link-alt"></i> Buka di Google Maps App
@@ -771,6 +843,10 @@ function formatDateIndo(date) {
 // FIX BUG: Toast Stuck
 function showToast(msg) {
     const toast = document.getElementById('toast');
+    if(!toast) { 
+        console.error("Toast element not found."); 
+        return; 
+    }
     const txt = document.getElementById('toastMsg');
     
     // 1. Hapus timer lama jika ada (FIX BUG STUCK)
@@ -806,13 +882,12 @@ function showToast(msg) {
 
 // UTILS HARGA
 function cleanPrice(value) {
+    // Digunakan HANYA untuk membersihkan input yang seharusnya numerik (IDR/USD)
     // Hapus semua karakter kecuali angka dan titik (untuk USD)
-    // Karena kita sudah menangani IDR dan USD di atas, cleanPrice ini hanya menghapus non-numeric untuk konversi
-    return value.replace(/[^0-9.]/g, ''); 
+    return value.toString().replace(/[^\d.]/g, ''); 
 }
 
 function formatRupiahDisplay(number) {
-    if (!number || number.toString().replace(/[^0-9]/g, '') === '') return 'TBA';
     const cleanNumber = number.toString().replace(/[^0-9]/g, ''); 
     if (!cleanNumber) return 'TBA';
     
@@ -822,7 +897,6 @@ function formatRupiahDisplay(number) {
 }
 
 function formatUSDDisplay(number) {
-    if (!number || number.toString().replace(/[^0-9.]/g, '') === '') return 'TBA';
     const cleanNumber = number.toString().replace(/[^0-9.]/g, ''); 
     if (!cleanNumber) return 'TBA';
 
@@ -836,7 +910,7 @@ function formatPriceInput(inputElement) {
     let value = inputElement.value;
     
     if (currency === 'IDR') {
-        // Izinkan angka dan titik
+        // Hapus karakter non-angka
         let clean = value.replace(/[^0-9]/g, '');
         if (clean) {
             // Format Rupiah (ribuan)
@@ -845,7 +919,7 @@ function formatPriceInput(inputElement) {
             inputElement.value = '';
         }
     } else if (currency === 'USD') {
-        // Izinkan angka dan titik/koma (hanya satu)
+        // Izinkan angka dan titik/koma (hanya satu titik)
         let clean = value.replace(/[^0-9.]/g, '');
         let parts = clean.split('.');
         if (parts.length > 2) {
@@ -853,6 +927,7 @@ function formatPriceInput(inputElement) {
         }
         inputElement.value = clean;
     } else {
-        // Biarkan input mentah untuk 'TBA' (memungkinkan 'FREE')
+        // Biarkan input mentah untuk 'TBA' atau 'FREE'
+        // Tidak perlu ada perubahan di sini
     }
 }

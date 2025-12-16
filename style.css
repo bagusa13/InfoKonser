@@ -4,6 +4,8 @@
    FIX KRITIS: Bottom Navigation Hilang di Mobile.
    FIX ESTETIKA AKHIR: Header dan Filter Bar Disesuaikan (Search Input & Button Primary DIKEMBALIKAN KE DEFAULT).
    FIX BARU: Perbaikan Ukuran Tombol "Cari Konser" (.btn-primary).
+   PERBAIKAN BARU: FIX BUG #8 (INPUT DATE STYLE) & Posisi Toast Aman (Mobile).
+   PERBAIKAN VISUAL: FIX OVERLAP TENTANG.HTML DI MOBILE.
    ============================================================ */
 
 /* FONT IMPORT */
@@ -388,6 +390,11 @@ body::before {
 }
 .input-dark:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(0,242,234,0.1); }
 
+/* FIX BUG #8: Styling untuk input type="date" agar teks terlihat putih/abu-abu */
+.input-dark[type="date"] {
+    color: #aaa;
+}
+
 .admin-card { background: #0a0c10; padding: 2rem; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 2rem; }
 .table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; }
 .data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
@@ -405,7 +412,12 @@ footer {
 }
 
 /* ABOUT PAGE */
-.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+.about-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 4rem; 
+    align-items: center; 
+}
 .about-img img { width: 100%; border-radius: 24px; filter: grayscale(100%); transition: 0.5s; border: 1px solid var(--border); }
 .about-img:hover img { filter: grayscale(0%); border-color: var(--primary); }
 
@@ -470,13 +482,33 @@ footer {
         padding-right: 1.5rem;
     }
     
-    /* SPASI INPUT ADMIN LEBIH LEGA */
-    .input-dark { margin-bottom: 20px; }
-    .form-row { display: flex; flex-direction: column; gap: 10px !important; }
+    /* FIX VISUAL BUG: About Grid menjadi tumpukan vertikal */
+    .about-grid {
+        grid-template-columns: 1fr; /* Paksa menjadi 1 kolom */
+        gap: 2rem; /* Kurangi jarak */
+        flex-direction: column; /* Memastikan tumpukan */
+        text-align: center; /* Pusat elemen teks di mobile */
+    }
+    
+    .about-img {
+        max-width: 300px; /* Batasi lebar gambar di mobile */
+        margin: 0 auto 1.5rem; /* Tengah dan beri jarak bawah */
+        order: -1; /* Pindahkan gambar ke atas blok teks */
+    }
+    
+    /* FIX BUG #7: Penyesuaian jarak Hero di halaman filosofi agar tidak tumpang tindih */
+    .hero.about-hero {
+        padding-bottom: 50px !important; /* Kurangi padding bawah agar konten langsung naik */
+    }
+    
+    .hero.about-hero h1 {
+        font-size: 2.5rem; /* Pastikan ukuran judul agar tidak terlalu besar */
+        margin-bottom: 20px;
+    }
     
     /* TOAST POSISI AMAN */
     .toast-container { 
-        bottom: 100px; /* Posisi aman di atas Bottom Nav Bar */
+        bottom: 85px; /* Posisi aman di atas Bottom Nav Bar */
     }
     
     /* HAPUS SEMUA STYLING TOMBOL BACK TO TOP */
